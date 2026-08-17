@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource/onest/400.css";
+@import "@fontsource/onest/500.css";
+@import "@fontsource/onest/600.css";
+@import "@fontsource/onest/700.css";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant theme-warm (&:is(.theme-warm *));
+@custom-variant theme-forest (&:is(.theme-forest *));
+@custom-variant theme-ocean (&:is(.theme-ocean *));
+
+@theme inline {
+  --font-sans: "Onest", sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sage: var(--sage);
+  --color-sand: var(--sand);
+  --color-lavender: var(--lavender);
+  --color-terracotta: var(--terracotta);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #FAF9F7;
+  --foreground: #2D2C2A;
+  --card: #FFFFFF;
+  --card-foreground: #2D2C2A;
+  --popover: #FFFFFF;
+  --popover-foreground: #2D2C2A;
+  --primary: #7C9A8E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #C4A882;
+  --secondary-foreground: #2D2C2A;
+  --muted: #F0EFED;
+  --muted-foreground: #6B6966;
+  --accent: #E8E6E3;
+  --accent-foreground: #2D2C2A;
+  --destructive: #D4887C;
+  --border: #E8E6E3;
+  --input: #E8E6E3;
+  --ring: #7C9A8E;
+  --chart-1: #7C9A8E;
+  --chart-2: #C4A882;
+  --chart-3: #9B8EC4;
+  --chart-4: #D4887C;
+  --chart-5: #8EB5C4;
+  --sage: #7C9A8E;
+  --sand: #C4A882;
+  --lavender: #9B8EC4;
+  --terracotta: #D4887C;
+}
+
+.dark {
+  --background: #1C1B1A;
+  --foreground: #E8E6E3;
+  --card: #2A2927;
+  --card-foreground: #E8E6E3;
+  --popover: #2A2927;
+  --popover-foreground: #E8E6E3;
+  --primary: #7C9A8E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #C4A882;
+  --secondary-foreground: #1C1B1A;
+  --muted: #2A2927;
+  --muted-foreground: #A09D99;
+  --accent: #3A3836;
+  --accent-foreground: #E8E6E3;
+  --destructive: #D4887C;
+  --border: #3A3836;
+  --input: #3A3836;
+  --ring: #7C9A8E;
+  --chart-1: #7C9A8E;
+  --chart-2: #C4A882;
+  --chart-3: #9B8EC4;
+  --chart-4: #D4887C;
+  --chart-5: #8EB5C4;
+  --sage: #7C9A8E;
+  --sand: #C4A882;
+  --lavender: #9B8EC4;
+  --terracotta: #D4887C;
+}
+
+.theme-warm {
+  --background: #FBF7F0;
+  --foreground: #3D2B1F;
+  --card: #FFFFFF;
+  --card-foreground: #3D2B1F;
+  --popover: #FFFFFF;
+  --popover-foreground: #3D2B1F;
+  --primary: #C47F5A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #D4A574;
+  --secondary-foreground: #3D2B1F;
+  --muted: #F5EDE3;
+  --muted-foreground: #8B7355;
+  --accent: #F0E0CC;
+  --accent-foreground: #3D2B1F;
+  --destructive: #C45C5C;
+  --border: #E8D5C0;
+  --input: #E8D5C0;
+  --ring: #C47F5A;
+  --chart-1: #C47F5A;
+  --chart-2: #D4A574;
+  --chart-3: #A68B6B;
+  --chart-4: #C45C5C;
+  --chart-5: #8B6F4E;
+  --sage: #A68B6B;
+  --sand: #D4A574;
+  --lavender: #A68B6B;
+  --terracotta: #C45C5C;
+}
+
+.theme-forest {
+  --background: #F4F7F2;
+  --foreground: #1F2E1A;
+  --card: #FFFFFF;
+  --card-foreground: #1F2E1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2E1A;
+  --primary: #4A7C59;
+  --primary-foreground: #FFFFFF;
+  --secondary: #7BAF6E;
+  --secondary-foreground: #1F2E1A;
+  --muted: #E8EDE5;
+  --muted-foreground: #5E7A52;
+  --accent: #D4E4CD;
+  --accent-foreground: #1F2E1A;
+  --destructive: #C45C5C;
+  --border: #C8D8C0;
+  --input: #C8D8C0;
+  --ring: #4A7C59;
+  --chart-1: #4A7C59;
+  --chart-2: #7BAF6E;
+  --chart-3: #8B6F4E;
+  --chart-4: #C45C5C;
+  --chart-5: #5E9963;
+  --sage: #4A7C59;
+  --sand: #7BAF6E;
+  --lavender: #8B6F4E;
+  --terracotta: #C45C5C;
+}
+
+.theme-ocean {
+  --background: #F2F6FA;
+  --foreground: #1A2533;
+  --card: #FFFFFF;
+  --card-foreground: #1A2533;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A2533;
+  --primary: #4A7B9C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #6BA3C4;
+  --secondary-foreground: #1A2533;
+  --muted: #E3EBF0;
+  --muted-foreground: #527088;
+  --accent: #C8D8E8;
+  --accent-foreground: #1A2533;
+  --destructive: #C45C5C;
+  --border: #B8CAD8;
+  --input: #B8CAD8;
+  --ring: #4A7B9C;
+  --chart-1: #4A7B9C;
+  --chart-2: #6BA3C4;
+  --chart-3: #7BAF6E;
+  --chart-4: #C45C5C;
+  --chart-5: #5E9963;
+  --sage: #7BAF6E;
+  --sand: #6BA3C4;
+  --lavender: #5E9963;
+  --terracotta: #C45C5C;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Onest", sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    line-height: 1.3;
+  }
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: 0 2px 12px rgba(45, 44, 42, 0.06);
+  }
+  .shadow-soft-lg {
+    box-shadow: 0 4px 24px rgba(45, 44, 42, 0.10);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .animate-fade-in {
+    animation: fadeIn 300ms ease-out;
+  }
+  .animate-slide-up {
+    animation: slideUp 400ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
