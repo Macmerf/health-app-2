@@ -53,3 +53,9 @@ data/
 # Prisma
 prisma/migrations/
 tool-results/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -14,10 +14,9 @@ export interface SubscriptionRow {
 let db: DatabaseSync | null = null;
 
 function resolveDbPath(): string {
-  const dataDir = process.env.DATA_DIR
-    ? join(process.cwd(), process.env.DATA_DIR)
-    : join(process.cwd(), 'data');
-  return join(dataDir, 'app.db');
+  const dataDir = process.env.DATA_DIR ?? 'data';
+  // Динамический путь из env — осознанное исключение из трейсинга Turbopack.
+  return join(/* turbopackIgnore: true */ process.cwd(), dataDir, 'app.db');
 }
 
 /** Лениво инициализирует SQLite (встроенный node:sqlite, Node >= 22.5). */
