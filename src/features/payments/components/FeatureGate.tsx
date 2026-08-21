@@ -45,7 +45,7 @@ export function FeatureGate({ featureKey, children, fallback }: FeatureGateProps
           <div className="flex items-center justify-center gap-2 text-foreground">
             <Lock size={18} strokeWidth={1.5} className="text-muted-foreground" />
             <p className="text-sm font-medium">
-              Эта функция доступна в {texts.common.premium}
+              {texts.featureGate.lockedTitle}
             </p>
           </div>
           <ZButton
@@ -53,7 +53,7 @@ export function FeatureGate({ featureKey, children, fallback }: FeatureGateProps
             size="sm"
             onClick={() => navigate('paywall')}
           >
-            Узнать больше
+            {texts.featureGate.lockedCta}
           </ZButton>
         </ZCard>
       </motion.div>

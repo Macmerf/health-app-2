@@ -67,15 +67,15 @@ function SettingsPage() {
           </div>
           <div className='flex-1'>
             <div className='flex items-center gap-2'>
-              <p className='text-sm font-semibold text-foreground'>Забота+</p>
+              <p className='text-sm font-semibold text-foreground'>{texts.common.premium}</p>
               {premium ? (
-                <ZBadge variant='primary'>Активна</ZBadge>
+                <ZBadge variant='primary'>{texts.settings.premiumActive}</ZBadge>
               ) : (
-                <ZBadge>Бесплатная версия</ZBadge>
+                <ZBadge>{texts.settings.freeVersion}</ZBadge>
               )}
             </div>
             <p className='text-xs text-muted-foreground mt-0.5'>
-              {premium ? 'Все функции разблокированы' : 'Журнал настроения, темы, дерево заботы и другое'}
+              {premium ? texts.settings.premiumAllUnlocked : texts.settings.premiumHint}
             </p>
           </div>
         </div>
@@ -89,10 +89,10 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <Palette size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Оформление</span>
+          <span className='text-sm'>{texts.settings.appearance}</span>
         </div>
         <span className='text-xs text-muted-foreground'>
-          {{ light: 'Светлая', dark: 'Тёмная', warm: 'Тёплая', forest: 'Лесная', ocean: 'Океан' }[theme]}
+          {texts.settings.themeNames[theme]}
         </span>
       </ZCard>
 
@@ -104,7 +104,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <BarChart3 size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Аналитика прогресса</span>
+          <span className='text-sm'>{texts.settings.analytics}</span>
         </div>
       </ZCard>
 
@@ -116,7 +116,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <Smile size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Журнал настроения</span>
+          <span className='text-sm'>{texts.settings.moodJournal}</span>
         </div>
         <ZBadge variant='primary' className='text-[10px]'>+</ZBadge>
       </ZCard>
@@ -129,7 +129,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <TreePine size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Дерево заботы</span>
+          <span className='text-sm'>{texts.settings.careTree}</span>
         </div>
         <ZBadge variant='primary' className='text-[10px]'>+</ZBadge>
       </ZCard>
@@ -142,7 +142,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <Scan size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Сканирование тела</span>
+          <span className='text-sm'>{texts.settings.bodyScan}</span>
         </div>
         <ZBadge variant='primary' className='text-[10px]'>+</ZBadge>
       </ZCard>
@@ -155,7 +155,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <Download size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Экспорт данных</span>
+          <span className='text-sm'>{texts.settings.exportData}</span>
         </div>
         <ZBadge variant='primary' className='text-[10px]'>+</ZBadge>
       </ZCard>
@@ -168,7 +168,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <BarChart3 size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Достижения</span>
+          <span className='text-sm'>{texts.settings.achievements}</span>
         </div>
       </ZCard>
 
@@ -180,7 +180,7 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <Bell size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Уведомления</span>
+          <span className='text-sm'>{texts.settings.notifications}</span>
         </div>
       </ZCard>
 
@@ -192,16 +192,16 @@ function SettingsPage() {
       >
         <div className='flex items-center gap-3'>
           <RotateCcw size={20} strokeWidth={1.5} className='text-muted-foreground' />
-          <span className='text-sm'>Повторить обучение</span>
+          <span className='text-sm'>{texts.settings.repeatOnboarding}</span>
         </div>
       </ZCard>
 
       <div className='pt-2'>
         <p className='text-xs text-muted-foreground text-center'>
-          Забота — поддержка при тревоге
+          {texts.settings.footerApp}
         </p>
         <p className='text-xs text-muted-foreground text-center mt-1'>
-          Не является медицинским инструментом
+          {texts.settings.footerDisclaimer}
         </p>
       </div>
     </div>

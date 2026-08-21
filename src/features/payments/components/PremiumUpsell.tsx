@@ -50,7 +50,7 @@ export function PremiumUpsell({ variant = 'card' }: PremiumUpsellProps) {
               size="sm"
               onClick={() => navigate('paywall')}
             >
-              Подробности
+              {texts.paywall.details}
             </ZButton>
           </div>
         </ZCard>
@@ -94,7 +94,7 @@ export function PremiumUpsell({ variant = 'card' }: PremiumUpsellProps) {
           className="w-full"
           onClick={() => navigate('paywall')}
         >
-          Подробности
+          {texts.paywall.details}
         </ZButton>
       </ZCard>
     </motion.div>

@@ -33,6 +33,20 @@ describe('JournalEntrySchema', () => {
     }
   });
 
+  it('принимает запись с выбранным узором мышления', () => {
+    const res = JournalEntrySchema.safeParse({
+      ...baseEntry,
+      sudsBefore: 70,
+      patternId: 'catastrophizing',
+      patternName: 'Катастрофизация',
+    });
+    assert.equal(res.success, true);
+    if (res.success) {
+      assert.equal(res.data.patternId, 'catastrophizing');
+      assert.equal(res.data.patternName, 'Катастрофизация');
+    }
+  });
+
   it('отклоняет запись без ситуации', () => {
     const res = JournalEntrySchema.safeParse({
       id: 'entry-2',

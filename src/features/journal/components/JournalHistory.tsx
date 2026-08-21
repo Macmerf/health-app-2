@@ -111,10 +111,11 @@ export function JournalHistory() {
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs text-muted-foreground">{formatDate(entry.createdAt)}</span>
                           {entry.emotionName && <ZBadge variant="primary">{truncate(entry.emotionName, 20)}</ZBadge>}
+                          {entry.patternName && <ZBadge variant="secondary">{truncate(entry.patternName, 20)}</ZBadge>}
                         </div>
                         <p className="text-sm text-foreground font-medium">{truncate(entry.situation, 60)}</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Тревога: {entry.sudsBefore}</span>
+                          <span className="text-xs text-muted-foreground">{texts.journal.sudsShort}: {entry.sudsBefore}</span>
                           {entry.sudsAfter != null && <ZBadge variant="secondary">→ {entry.sudsAfter}</ZBadge>}
                         </div>
                         <div className="flex justify-end">
@@ -144,7 +145,7 @@ export function JournalHistory() {
                                 </div>
                               )}
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Уровень тревоги</span>
+                                <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.sudsLabel}</span>
                                 <div className="flex items-center gap-2">
                                   <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${entry.sudsBefore}%` }} /></div>
                                   <span className="text-xs font-semibold text-primary tabular-nums w-6 text-right">{entry.sudsBefore}</span>
@@ -159,7 +160,7 @@ export function JournalHistory() {
                               <div className="flex justify-end pt-2">
                                 {isConfirming ? (
                                   <div className="flex items-center gap-2">
-                                    <span className="text-xs text-terracotta">Точно удалить?</span>
+                                    <span className="text-xs text-terracotta">{texts.journal.confirmDelete}</span>
                                     <ZButton variant="destructive" size="sm" onClick={() => handleDelete(entry.id)}>{texts.common.delete}</ZButton>
                                     <ZButton variant="ghost" size="sm" onClick={cancelDelete}>{texts.common.cancel}</ZButton>
                                   </div>

@@ -13,8 +13,10 @@ import { ZBadge } from '@/shared/ui/ZBadge';
 import { useToast } from '@/shared/ui/ZToast';
 import { texts } from '@/shared/constants/texts';
 import { EmotionSelector } from './EmotionSelector';
+import { ThoughtPatternSelector } from './ThoughtPatternSelector';
 import { useJournalStore } from '../store';
 import type { JournalEntry } from '@/shared/schemas';
+import type { ThoughtPattern } from '@/shared/schemas';
 import { useRouterStore } from '@/shared/lib/stores';
 import { checkCrisisKeywords } from '@/shared/lib/crisis-detector';
 import { z } from 'zod/v4';
@@ -65,6 +67,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
   const [situation, setSituation] = useState('');
   const [thoughts, setThoughts] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
+  const [selectedPattern, setSelectedPattern] = useState<ThoughtPattern | null>(null);
   const [physical, setPhysical] = useState('');
   const [sudsBefore, setSudsBefore] = useState(50);
   const [newView, setNewView] = useState('');
@@ -135,11 +138,13 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
       newView: combinedView || newView,
       emotionId: selectedEmotion?.id,
       emotionName: selectedEmotion?.name,
+      patternId: selectedPattern?.id,
+      patternName: selectedPattern?.friendlyName,
     };
     addEntry(entry);
     showToast(texts.journal.saved, 'success');
     onComplete();
-  }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, addEntry, showToast, onComplete]);
+  }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, selectedPattern, addEntry, showToast, onComplete]);
 
   const progressLabels = useMemo(
     () => STEP_LABELS.map((label) => (label.length > 6 ? label.slice(0, 6) + '...' : label)),
@@ -193,6 +198,14 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                   <h3 className="text-sm font-semibold text-foreground">{texts.journal.patternSelectTitle}</h3>
                   <EmotionSelector value={selectedEmotion} onChange={setSelectedEmotion} />
                 </div>
+
+                <div className="flex flex-col gap-2 rounded-2xl bg-lavender/5 border border-lavender/15 p-4">
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-sm font-semibold text-foreground">{texts.journal.thoughtPatternTitle}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{texts.journal.thoughtPatternHelp}</p>
+                  </div>
+                  <ThoughtPatternSelector value={selectedPattern} onChange={setSelectedPattern} />
+                </div>
               </motion.div>
             )}
 
@@ -223,16 +236,16 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
 
                 {/* Quick practice reminders */}
                 <div className="rounded-2xl bg-terracotta/8 border border-terracotta/15 p-4">
-                  <p className="text-sm font-medium text-foreground mb-2">Тревога сильная? Попробуй прямо сейчас:</p>
+                  <p className="text-sm font-medium text-foreground mb-2">{texts.journal.strongAnxietyPrompt}</p>
                   <div className="flex flex-col gap-2">
                     <button onClick={() => navigate('breathing')} className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 text-left hover:bg-muted transition-colors">
                       <Wind size={18} strokeWidth={1.5} className="text-primary shrink-0" />
-                      <span className="text-sm text-foreground">Дыхание — вдох 4 сек, выдох 4 сек</span>
+                      <span className="text-sm text-foreground">{texts.journal.breathingQuick}</span>
                       <ArrowRight size={16} strokeWidth={1.5} className="text-muted-foreground shrink-0 ml-auto" />
                     </button>
                     <button onClick={() => navigate('grounding')} className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 text-left hover:bg-muted transition-colors">
                       <TreePine size={18} strokeWidth={1.5} className="text-lavender shrink-0" />
-                      <span className="text-sm text-foreground">Заземление 5-4-3-2-1</span>
+                      <span className="text-sm text-foreground">{texts.journal.groundingQuick}</span>
                       <ArrowRight size={16} strokeWidth={1.5} className="text-muted-foreground shrink-0 ml-auto" />
                     </button>
                   </div>
@@ -243,8 +256,31 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
             {/* Step E: New View + reflection questions */}
             {step === STEP_E && (
               <motion.div key="step-e" custom={direction} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }} className="flex flex-col gap-4">
-                <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepE}</h2>
+                                <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepE}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepEHelp}</p>
+
+                {/* Выбранный узор мышления — описание, пример, вопросы для рефрейминга */}
+                {selectedPattern && (
+                  <div className="flex flex-col gap-3 rounded-2xl bg-lavender/8 border border-lavender/20 p-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-lavender">{texts.journal.thoughtPatternTitle}</span>
+                      <p className="text-base font-semibold text-foreground">{selectedPattern.friendlyName}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{selectedPattern.description}</p>
+                    </div>
+                    {selectedPattern.examples.length > 0 && (
+                      <div className="flex flex-col gap-1 rounded-xl bg-card px-3 py-2.5">
+                        <span className="text-xs font-medium text-muted-foreground">{texts.journal.thoughtPatternExample}</span>
+                        <p className="text-sm text-foreground leading-relaxed">{selectedPattern.examples[0]}</p>
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-muted-foreground">{texts.journal.thoughtPatternReframing}</span>
+                      {selectedPattern.reframingQuestions.map((q, i) => (
+                        <p key={i} className="text-sm text-foreground leading-relaxed">• {q}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Reflection questions — не кликабельные, с полями для ответов */}
                 <div className="flex flex-col gap-4">
@@ -254,7 +290,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                       <textarea
                         value={reflectionAnswers[i] ?? ''}
                         onChange={(e) => setReflectionAnswers((prev) => ({ ...prev, [i]: e.target.value }))}
-                        placeholder="Запиши свои мысли…"
+                        placeholder={texts.journal.reflectionPlaceholder}
                         rows={2}
                         className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-y"
                       />
@@ -296,6 +332,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                     <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepB}</span>
                     <p className="text-sm text-foreground">{thoughts}</p>
                     {selectedEmotion && <ZBadge variant="primary" className="self-start mt-1">{selectedEmotion.name}</ZBadge>}
+                    {selectedPattern && <ZBadge variant="secondary" className="self-start mt-1">{selectedPattern.friendlyName}</ZBadge>}
                   </div>
                   {physical && (
                     <>
@@ -308,7 +345,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                   )}
                   <hr className="border-border" />
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Тревога до</span>
+                    <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.sudsBeforeLabel}</span>
                     <div className="flex items-center gap-2">
                       <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${sudsBefore}%` }} /></div>
                       <span className="text-sm font-semibold text-primary tabular-nums w-8 text-right">{sudsBefore}</span>
@@ -320,7 +357,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                     <p className="text-sm text-foreground">{newView}</p>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Тревога после</span>
+                    <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.sudsAfterLabel}</span>
                     <div className="flex items-center gap-2">
                       <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className={`h-full rounded-full ${anxietyIncreased ? 'bg-terracotta' : 'bg-primary'}`} style={{ width: `${sudsAfter}%` }} /></div>
                       <span className={`text-sm font-semibold tabular-nums w-8 text-right ${anxietyIncreased ? 'text-terracotta' : 'text-primary'}`}>{sudsAfter}</span>
@@ -358,7 +395,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
 
                 {!anxietyIncreased && sudsAfter < sudsBefore && (
                   <p className="text-sm text-primary font-medium text-center">
-                    Тревога снизилась на {sudsBefore - sudsAfter} пунктов!
+                    {texts.journal.anxietyDecreased.replace('{n}', String(sudsBefore - sudsAfter))}
                   </p>
                 )}
               </motion.div>

@@ -12,6 +12,8 @@ export const JournalEntrySchema = z.object({
   newView: z.string().optional(),
   emotionId: z.string().optional(),
   emotionName: z.string().optional(),
+  patternId: z.string().optional(),
+  patternName: z.string().optional(),
 });
 export type JournalEntry = z.infer<typeof JournalEntrySchema>;
 

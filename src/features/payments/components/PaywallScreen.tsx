@@ -146,7 +146,7 @@ export function PaywallScreen() {
               onClick={handlePay}
               loading={processing}
             >
-              Оплатить {texts.paywall.price}
+              {texts.paywall.payNow} {texts.paywall.price}
             </ZButton>
           )}
 

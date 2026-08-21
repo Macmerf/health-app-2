@@ -108,7 +108,7 @@ export function ExposureSession() {
   const handleSaveSudsCheck = useCallback(() => {
     setSUDSChecks((prev) => [...prev, { time: elapsedRef.current, suds: currentSuds }]);
     setShowSudsPrompt(false);
-    showToast('Записано', 'info');
+    showToast(texts.exposure.sudsRecorded, 'info');
   }, [currentSuds, showToast]);
 
   const handleStop = useCallback(() => {
@@ -254,7 +254,7 @@ export function ExposureSession() {
                       step={5}
                     />
                     <ZButton variant="primary" onClick={handleSaveSudsCheck} className="w-full">
-                      Записать
+                      {texts.exposure.recordSuds}
                     </ZButton>
                   </ZCard>
                 </motion.div>
