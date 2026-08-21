@@ -48,6 +48,7 @@ server.log
 # DB
 *.db
 *.db-journal
+data/
 
 # Prisma
 prisma/migrations/

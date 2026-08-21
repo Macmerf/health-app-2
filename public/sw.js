@@ -3,6 +3,7 @@ const CACHE_NAME = 'zabota-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  '/offline.html',
 ];
 
 self.addEventListener('install', (event) => {
@@ -52,7 +53,9 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/offline.html'))
+        )
     );
     return;
   }
