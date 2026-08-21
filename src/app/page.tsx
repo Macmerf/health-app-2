@@ -13,7 +13,6 @@ import { JournalHistory } from '@/features/journal';
 import { HierarchyList } from '@/features/exposure';
 import { HierarchyBuilder } from '@/features/exposure';
 import { ExposureSession } from '@/features/exposure';
-import { HabituationChart } from '@/features/exposure';
 import { CarePlanScreen } from '@/features/care-plan';
 import { BreathingExercise } from '@/features/care-plan';
 import { Grounding54321 } from '@/features/care-plan';
@@ -27,9 +26,6 @@ import { BodyScan } from '@/features/body-scan';
 import { DataExport } from '@/features/export';
 
 import {
-  Settings,
-  Moon,
-  Sun,
   BarChart3,
   Bell,
   Heart,
@@ -42,19 +38,16 @@ import {
   Scan,
 } from 'lucide-react';
 import { ZCard } from '@/shared/ui/ZCard';
-import { ZButton } from '@/shared/ui/ZButton';
 import { ZHeader } from '@/shared/ui/ZHeader';
 import { ZBadge } from '@/shared/ui/ZBadge';
 import { usePaymentStore } from '@/features/payments';
 import { OnboardingTour } from '@/shared/ui/OnboardingTour';
 import { useOnboardingStore } from '@/shared/lib/onboarding-store';
-import { FeatureGate } from '@/features/payments';
 import { AnalyticsPageInner } from '@/shared/ui/AnalyticsPageInner';
 
 function SettingsPage() {
   const theme = useThemeStore((s) => s.theme);
   const navigate = useRouterStore((s) => s.navigate);
-  const entitlement = usePaymentStore((s) => s.entitlement);
   const resetOnboarding = useOnboardingStore((s) => s.resetOnboarding);
   const isPremium = usePaymentStore((s) => s.isPremium);
 
@@ -66,8 +59,7 @@ function SettingsPage() {
       <ZCard
         className='cursor-pointer bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20'
         onClick={() => navigate('paywall')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 flex-shrink-0'>
@@ -93,8 +85,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('themes')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <Palette size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -109,8 +100,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('analytics')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <BarChart3 size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -122,8 +112,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('mood')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <Smile size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -136,8 +125,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('care-tree')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <TreePine size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -150,8 +138,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('body-scan')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <Scan size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -164,8 +151,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('export')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <Download size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -178,8 +164,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('achievements')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <BarChart3 size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -191,8 +176,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => navigate('notifications')}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <Bell size={20} strokeWidth={1.5} className='text-muted-foreground' />
@@ -204,8 +188,7 @@ function SettingsPage() {
       <ZCard
         className='flex items-center justify-between cursor-pointer'
         onClick={() => { resetOnboarding(); navigate('home'); }}
-        role='button'
-        tabIndex={0}
+
       >
         <div className='flex items-center gap-3'>
           <RotateCcw size={20} strokeWidth={1.5} className='text-muted-foreground' />

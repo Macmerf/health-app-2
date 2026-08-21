@@ -2,7 +2,6 @@ export type AppRoute =
   | 'home'
   | 'journal'
   | 'journal-new'
-  | 'journal-history'
   | 'exposure'
   | 'exposure-new'
   | 'exposure-session'
@@ -15,6 +14,7 @@ export type AppRoute =
   | 'mood'
   | 'care-tree'
   | 'themes'
+  | 'export'
   | 'paywall'
   | 'settings'
   | 'notifications';

@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Download, FileText } from 'lucide-react';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
 import { FeatureGate } from '@/features/payments';
 import { useMoodStore } from '@/shared/lib/stores';
-import { storage } from '@/shared/lib/storage';
+import { useJournalStore } from '@/features/journal';
 
 function downloadBlob(content: string, filename: string, type: string) {
   const blob = new Blob(['\uFEFF' + content], { type: `${type};charset=utf-8` });
@@ -27,13 +26,13 @@ export function DataExport() {
   const exportCSV = async () => {
     setExporting(true);
     try {
-      const journalEntries = (await storage.get<any[]>('zabota-journal'))?.entries ?? [];
+      const journalEntries = useJournalStore.getState().entries;
 
-      const lines = ['Дата,Ситуация,Мысли,Тревога до,Тревога после,Новый взгляд'];
+      const lines = ['Дата,Ситуация,Мысли,Физические проявления,Тревога до,Тревога после,Новый взгляд'];
       for (const e of journalEntries) {
         const date = new Date(e.createdAt).toLocaleDateString('ru-RU');
         const esc = (s: string) => `"${(s || '').replace(/"/g, '""')}"`;
-        lines.push(`${date},${esc(e.situation)},${esc(e.thoughts)},${e.sudsBefore ?? ''},${e.sudsAfter ?? ''},${esc(e.newView)}`);
+        lines.push(`${date},${esc(e.situation)},${esc(e.thoughts)},${esc(e.physical || '')},${e.sudsBefore ?? ''},${e.sudsAfter ?? ''},${esc(e.newView || '')}`);
       }
 
       downloadBlob(lines.join('\n'), `zabota-dnevnik-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');

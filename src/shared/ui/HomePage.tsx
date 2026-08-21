@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { useRouterStore } from '@/shared/lib/stores';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
@@ -13,13 +13,13 @@ import {
   TreePine,
 } from 'lucide-react';
 
-const container = {
+const container: Variants = {
   animate: { transition: { staggerChildren: 0.08 } },
 };
 
-const item = {
+const item: Variants = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] as const } },
 };
 
 interface HomeCardProps {
@@ -33,7 +33,7 @@ interface HomeCardProps {
 
 function HomeCard({ icon, iconBg, title, description, howTo, onNavigate }: HomeCardProps) {
   return (
-    <ZCard className='cursor-pointer' onClick={onNavigate} role='button' tabIndex={0}>
+    <ZCard className='cursor-pointer' onClick={onNavigate}>
       <div className='flex items-start gap-4'>
         <div className={`flex items-center justify-center w-12 h-12 rounded-2xl shrink-0 ${iconBg}`}>
           {icon}
@@ -118,8 +118,6 @@ export function HomePage() {
           <ZCard
             className='cursor-pointer text-center py-5'
             onClick={() => navigate('breathing')}
-            role='button'
-            tabIndex={0}
             aria-label='Дыхательная практика'
           >
             <Wind size={24} strokeWidth={1.5} className='mx-auto text-primary mb-2' />
@@ -132,8 +130,6 @@ export function HomePage() {
           <ZCard
             className='cursor-pointer text-center py-5'
             onClick={() => navigate('grounding')}
-            role='button'
-            tabIndex={0}
             aria-label='Заземление 5-4-3-2-1'
           >
             <TreePine size={24} strokeWidth={1.5} className='mx-auto text-lavender mb-2' />

@@ -10,7 +10,8 @@ const variantStyles = {
 
 type CardVariant = keyof typeof variantStyles;
 
-export interface ZCardProps {
+export interface ZCardProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'className' | 'children' | 'onClick'> {
   variant?: CardVariant;
   className?: string;
   children: React.ReactNode;
@@ -22,11 +23,13 @@ export function ZCard({
   className,
   children,
   onClick,
+  ...rest
 }: ZCardProps) {
   const isClickable = typeof onClick === 'function';
 
   return (
     <div
+      {...rest}
       className={clsx(
         'rounded-2xl p-5',
         variantStyles[variant],
@@ -34,8 +37,8 @@ export function ZCard({
         className,
       )}
       onClick={onClick}
-      role={isClickable ? 'button' : undefined}
-      tabIndex={isClickable ? 0 : undefined}
+      role={isClickable ? 'button' : rest.role}
+      tabIndex={isClickable ? 0 : rest.tabIndex}
       onKeyDown={
         isClickable
           ? (e: React.KeyboardEvent) => {
@@ -44,7 +47,7 @@ export function ZCard({
                 onClick!();
               }
             }
-          : undefined
+          : rest.onKeyDown
       }
     >
       {children}

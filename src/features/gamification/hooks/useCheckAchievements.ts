@@ -52,9 +52,9 @@ export function useCheckAchievements() {
     const entries = useJournalStore.getState().entries;
     const count = entries.length;
 
-    // Подсчёт уникальных узоров мышления
-    const uniquePatterns = new Set(
-      entries.map((e) => e.patternId).filter(Boolean),
+    // Подсчёт уникальных эмоций
+    const uniqueEmotions = new Set(
+      entries.map((e) => e.emotionId).filter(Boolean),
     ).size;
 
     // Подсчёт всех использований шкалы SUDs (sudsBefore + sudsAfter)
@@ -65,15 +65,15 @@ export function useCheckAchievements() {
     }
 
     recordAction('journal_entries', count);
-    recordAction('unique_patterns', uniquePatterns);
+    recordAction('unique_patterns', uniqueEmotions);
     recordAction('suds_usage', sudsCount);
 
     tryUnlock('first_journal_entry', count >= 1, unlockAchievement, isUnlocked, showToast);
     tryUnlock('journal_7', count >= 7, unlockAchievement, isUnlocked, showToast);
     tryUnlock('journal_30', count >= 30, unlockAchievement, isUnlocked, showToast);
     tryUnlock('journal_100', count >= 100, unlockAchievement, isUnlocked, showToast);
-    tryUnlock('patterns_5', uniquePatterns >= 5, unlockAchievement, isUnlocked, showToast);
-    tryUnlock('patterns_10', uniquePatterns >= 10, unlockAchievement, isUnlocked, showToast);
+    tryUnlock('patterns_5', uniqueEmotions >= 5, unlockAchievement, isUnlocked, showToast);
+    tryUnlock('patterns_10', uniqueEmotions >= 10, unlockAchievement, isUnlocked, showToast);
     tryUnlock('suds_10', sudsCount >= 10, unlockAchievement, isUnlocked, showToast);
   }, [unlockAchievement, isUnlocked, recordAction, showToast]);
 

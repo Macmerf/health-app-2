@@ -4,8 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Home, BookOpen, TrendingUp, User, Settings, Sparkles, Smile, TreePine, BarChart3, Bell, Download, Scan } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
-import { useRouterStore, useThemeStore } from '@/shared/lib/stores';
-import { usePaymentStore } from '@/features/payments';
+import { useRouterStore } from '@/shared/lib/stores';
 import type { AppRoute } from '@/shared/lib/router';
 
 interface NavItem {
@@ -34,8 +33,6 @@ const MENU_ITEMS = [
 export function ZBottomNav() {
   const route = useRouterStore((s) => s.route);
   const navigate = useRouterStore((s) => s.navigate);
-  const theme = useThemeStore((s) => s.theme);
-  const toggleDarkLight = useThemeStore((s) => s.toggleDarkLight);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

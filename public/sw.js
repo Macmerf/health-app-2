@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zabota-v1';
+const CACHE_NAME = 'zabota-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -38,6 +38,21 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Навигация — network-first: после деплоя пользователи сразу видят свежую версию,
+  // а офлайн-фолбэк на кэш остаётся для работы без сети.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
     );
     return;
   }

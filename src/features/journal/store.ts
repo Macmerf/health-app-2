@@ -46,6 +46,20 @@ export const useJournalStore = create<JournalStore>()(
       name: 'zabota-journal',
       storage: createJSONStorage(() => createPersistConfig('zabota-journal').storage),
       partialize: (state) => ({ entries: state.entries }),
+      // Миграция старых записей: patternId/patternName → emotionId/emotionName
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as { entries?: JournalEntry[] };
+        const entries = (persisted?.entries ?? []).map((entry) => {
+          const legacy = entry as JournalEntry & { patternId?: string; patternName?: string };
+          if (entry.emotionId || !legacy.patternId) return entry;
+          return {
+            ...entry,
+            emotionId: legacy.patternId,
+            emotionName: legacy.patternName,
+          };
+        });
+        return { ...currentState, entries };
+      },
     },
   ),
 );

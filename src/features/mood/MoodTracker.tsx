@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
 import { FeatureGate } from '@/features/payments';
-import { useMoodStore, type MoodEntry } from '@/shared/lib/stores';
+import { useMoodStore } from '@/shared/lib/stores';
 
 const MOODS = [
   { value: 1, emoji: '😞', label: 'Очень плохо' },
@@ -21,7 +21,6 @@ function MoodEmoji({ value, size = 32 }: { value: number; size?: number }) {
 }
 
 function MiniCalendar() {
-  const entries = useMoodStore((s) => s.entries);
   const getEntryForDate = useMoodStore((s) => s.getEntryForDate);
 
   const today = new Date();
@@ -31,12 +30,9 @@ function MiniCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const weekStart = firstDay === 0 ? 6 : firstDay - 1;
 
-  const days = useMemo(() => {
-    const arr: (number | null)[] = [];
-    for (let i = 0; i < weekStart; i++) arr.push(null);
-    for (let d = 1; d <= daysInMonth; d++) arr.push(d);
-    return arr;
-  }, [weekStart, daysInMonth]);
+  const days: (number | null)[] = [];
+  for (let i = 0; i < weekStart; i++) days.push(null);
+  for (let d = 1; d <= daysInMonth; d++) days.push(d);
 
   const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 

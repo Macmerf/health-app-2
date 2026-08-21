@@ -81,7 +81,10 @@ export function PremiumUpsell({ variant = 'card' }: PremiumUpsellProps) {
           {HIGHLIGHT_FEATURES.map((feature, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-foreground">
               <span className="mt-1.5 block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
-              {feature}
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">{feature.title}</span>
+                <span className="text-xs text-muted-foreground">{feature.description}</span>
+              </span>
             </li>
           ))}
         </ul>

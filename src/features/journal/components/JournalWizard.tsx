@@ -16,6 +16,7 @@ import { EmotionSelector } from './EmotionSelector';
 import { useJournalStore } from '../store';
 import type { JournalEntry } from '@/shared/schemas';
 import { useRouterStore } from '@/shared/lib/stores';
+import { checkCrisisKeywords } from '@/shared/lib/crisis-detector';
 import { z } from 'zod/v4';
 import type { Emotion } from '../data/emotions';
 
@@ -128,16 +129,17 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
       updatedAt: now,
       situation,
       thoughts,
+      physical: physical.trim() || undefined,
       sudsBefore,
       sudsAfter,
       newView: combinedView || newView,
-      patternId: selectedEmotion?.id,
-      patternName: selectedEmotion?.name,
+      emotionId: selectedEmotion?.id,
+      emotionName: selectedEmotion?.name,
     };
     addEntry(entry);
     showToast(texts.journal.saved, 'success');
     onComplete();
-  }, [situation, thoughts, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, addEntry, showToast, onComplete]);
+  }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, addEntry, showToast, onComplete]);
 
   const progressLabels = useMemo(
     () => STEP_LABELS.map((label) => (label.length > 6 ? label.slice(0, 6) + '...' : label)),
@@ -170,6 +172,23 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                 <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepB}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepBHelp}</p>
                 <ZTextArea placeholder={texts.journal.thoughtPlaceholder} value={thoughts} onChange={(e) => { setThoughts(e.target.value); if (errors.thoughts) setErrors((prev) => ({ ...prev, thoughts: '' })); }} error={errors.thoughts} rows={4} />
+                {checkCrisisKeywords(thoughts) && (
+                  <div className="flex flex-col gap-3 rounded-2xl bg-terracotta/8 border border-terracotta/15 p-4">
+                    <p className="text-sm font-medium text-terracotta">{texts.carePlan.crisisDetected}</p>
+                    <p className="text-xs text-muted-foreground">{texts.journal.anxietyIncreasedBody}</p>
+                    <div className="flex flex-col gap-2">
+                      <button onClick={() => navigate('breathing')} className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 text-left hover:bg-muted transition-colors">
+                        <Wind size={16} strokeWidth={1.5} className="text-primary shrink-0" />
+                        <span className="text-sm text-foreground">{texts.journal.tryBreathing}</span>
+                      </button>
+                      <button onClick={() => navigate('grounding')} className="flex items-center gap-3 rounded-xl bg-card px-3 py-2.5 text-left hover:bg-muted transition-colors">
+                        <TreePine size={16} strokeWidth={1.5} className="text-lavender shrink-0" />
+                        <span className="text-sm text-foreground">{texts.journal.tryGrounding}</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{texts.journal.rememberDoctor}</p>
+                  </div>
+                )}
                 <div className="flex flex-col gap-2 pt-2">
                   <h3 className="text-sm font-semibold text-foreground">{texts.journal.patternSelectTitle}</h3>
                   <EmotionSelector value={selectedEmotion} onChange={setSelectedEmotion} />

@@ -3,11 +3,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
-import { ZButton } from '@/shared/ui/ZButton';
 import { ZBadge } from '@/shared/ui/ZBadge';
-import { FeatureGate } from '@/features/payments';
 import { useThemeStore } from '@/shared/lib/stores';
-import type { ThemeId, ThemeOption } from '@/shared/schemas';
+import type { ThemeOption } from '@/shared/schemas';
 import { Check } from 'lucide-react';
 import { useRouterStore } from '@/shared/lib/stores';
 
@@ -50,8 +48,6 @@ export function ThemePicker() {
                   }
                   setTheme(t.id);
                 }}
-                role='button'
-                tabIndex={0}
               >
                 {/* Превью */}
                 <div

@@ -11,6 +11,7 @@ import { useRouterStore } from '@/shared/lib/stores';
 import { texts } from '@/shared/constants/texts';
 import { useCarePlanStore } from '../store';
 import { FeatureGuide } from '@/shared/ui/FeatureGuide';
+import { checkCrisisKeywords } from '@/shared/lib/crisis-detector';
 
 const CARE_PLAN_GUIDE = {
   guideId: 'care-plan',
@@ -59,6 +60,10 @@ export function CarePlanScreen() {
       value: string,
     ) => {
       updateField(field, value);
+      if (checkCrisisKeywords(value)) {
+        showToast(texts.carePlan.crisisDetected, 'error');
+        return;
+      }
       showToast(texts.carePlan.saved, 'success');
     },
     [updateField, showToast],

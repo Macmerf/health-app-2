@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
@@ -19,7 +19,7 @@ const PAYMENT_OPTIONS = [
   { value: 'manual_transfer' as PaymentMethod, label: texts.paywall.manualTransfer },
 ];
 
-const container = {
+const container: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -27,9 +27,9 @@ const container = {
   },
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] as const } },
 };
 
 export function PaywallScreen() {

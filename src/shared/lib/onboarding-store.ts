@@ -12,7 +12,7 @@ interface OnboardingStore {
 }
 
 export const useOnboardingStore = create<OnboardingStore>()(
-  persist(
+  persist<OnboardingStore, [], [], Pick<OnboardingStore, 'tourCompleted' | 'dismissedGuides'>>(
     (set, get) => ({
       tourCompleted: false,
       dismissedGuides: [],
@@ -33,7 +33,8 @@ export const useOnboardingStore = create<OnboardingStore>()(
       resetOnboarding: () => set({ tourCompleted: false, dismissedGuides: [] }),
     }),
     {
-      ...createPersistConfig('onboarding'),
+      name: 'onboarding',
+      storage: createJSONStorage(() => createPersistConfig('onboarding').storage),
       partialize: (state) => ({
         tourCompleted: state.tourCompleted,
         dismissedGuides: state.dismissedGuides,

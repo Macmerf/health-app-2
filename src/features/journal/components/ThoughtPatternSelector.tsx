@@ -4,7 +4,6 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZInput } from '@/shared/ui/ZInput';
-import { ZBadge } from '@/shared/ui/ZBadge';
 import { clsx } from 'clsx';
 import { texts } from '@/shared/constants/texts';
 import { thoughtPatterns } from '../data/thought-patterns';

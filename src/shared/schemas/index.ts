@@ -6,11 +6,12 @@ export const JournalEntrySchema = z.object({
   updatedAt: z.string().datetime(),
   situation: z.string().min(1, 'Опиши ситуацию'),
   thoughts: z.string().min(1, 'Опиши свои мысли'),
+  physical: z.string().optional(),
   sudsBefore: z.number().min(0).max(100),
   sudsAfter: z.number().min(0).max(100).optional(),
   newView: z.string().optional(),
-  patternId: z.string().optional(),
-  patternName: z.string().optional(),
+  emotionId: z.string().optional(),
+  emotionName: z.string().optional(),
 });
 export type JournalEntry = z.infer<typeof JournalEntrySchema>;
 

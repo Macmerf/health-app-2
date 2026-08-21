@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZBadge } from '@/shared/ui/ZBadge';

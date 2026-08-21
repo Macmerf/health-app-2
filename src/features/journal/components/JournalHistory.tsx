@@ -110,7 +110,7 @@ export function JournalHistory() {
                       <button onClick={() => toggleExpand(entry.id)} className="flex flex-col gap-1.5 w-full text-left">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs text-muted-foreground">{formatDate(entry.createdAt)}</span>
-                          {entry.patternName && <ZBadge variant="primary">{truncate(entry.patternName, 20)}</ZBadge>}
+                          {entry.emotionName && <ZBadge variant="primary">{truncate(entry.emotionName, 20)}</ZBadge>}
                         </div>
                         <p className="text-sm text-foreground font-medium">{truncate(entry.situation, 60)}</p>
                         <div className="flex items-center gap-2">
@@ -131,6 +131,12 @@ export function JournalHistory() {
                                 <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepB}</span>
                                 <p className="text-sm text-foreground">{entry.thoughts}</p>
                               </div>
+                              {entry.physical && (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepC}</span>
+                                  <p className="text-sm text-foreground">{entry.physical}</p>
+                                </div>
+                              )}
                               {entry.newView && (
                                 <div className="flex flex-col gap-0.5">
                                   <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepE}</span>

@@ -28,7 +28,7 @@ export const storage = {
   },
 };
 
-export function createPersistConfig<T>(name: string) {
+export function createPersistConfig(name: string) {
   return {
     name,
     storage: {

@@ -17,7 +17,7 @@ interface ExposureStore {
 
 export const useExposureStore = create<ExposureStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       hierarchies: [],
       sessions: [],
 

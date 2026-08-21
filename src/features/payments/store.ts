@@ -24,6 +24,8 @@ interface PaymentStore {
   activatePremium: (method: PaymentMethod) => void;
   checkEntitlement: (key: string) => boolean;
   isPremium: () => boolean;
+  /** Побочный эффект: понижает тариф до free, если подписка истекла и льготный период прошёл. */
+  refreshEntitlement: () => void;
 }
 
 function isExpired(expiresAt: string | undefined): boolean {
@@ -35,6 +37,13 @@ function isInGracePeriod(expiresAt: string | undefined): boolean {
   if (!expiresAt) return false;
   const expiredAt = new Date(expiresAt).getTime();
   return Date.now() - expiredAt <= GRACE_PERIOD_MS;
+}
+
+/** Чистая (без побочных эффектов) проверка активного премиума. */
+function isPremiumActive(entitlement: UserEntitlement): boolean {
+  if (entitlement.tier !== 'premium') return false;
+  if (!isExpired(entitlement.expiresAt)) return true;
+  return isInGracePeriod(entitlement.expiresAt);
 }
 
 export const usePaymentStore = create<PaymentStore>()(
@@ -60,7 +69,7 @@ export const usePaymentStore = create<PaymentStore>()(
         });
       },
 
-      activatePremium: (_method: PaymentMethod) => {
+      activatePremium: () => {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000);
         set({
@@ -72,45 +81,26 @@ export const usePaymentStore = create<PaymentStore>()(
         });
       },
 
+      // Чистая проверка — безопасна для вызова во время рендера.
       checkEntitlement: (key: string) => {
-        // Базовые функции всегда доступны
         if (FREE_FEATURES.has(key)) return true;
-
-        const { entitlement } = get();
-
-        // Если уже free — премимум-функции недоступны
-        if (entitlement.tier === 'free') return false;
-
-        // Если премиум активен и не истёк — доступно
-        if (!isExpired(entitlement.expiresAt)) return true;
-
-        // Если истёк, но в льготном периоде — пока доступно
-        if (isInGracePeriod(entitlement.expiresAt)) return true;
-
-        // Истёк, льготный период прошёл — понижаем до free
-        set({
-          entitlement: {
-            ...entitlement,
-            tier: 'free',
-          },
-        });
-        return false;
+        return isPremiumActive(get().entitlement);
       },
 
-      isPremium: () => {
-        const { entitlement } = get();
-        if (entitlement.tier !== 'premium') return false;
-        if (!isExpired(entitlement.expiresAt)) return true;
-        if (isInGracePeriod(entitlement.expiresAt)) return true;
+      // Чистая проверка — безопасна для вызова во время рендера.
+      isPremium: () => isPremiumActive(get().entitlement),
 
-        // Истёк — понижаем
-        set({
-          entitlement: {
-            ...entitlement,
-            tier: 'free',
-          },
-        });
-        return false;
+      // Побочный эффект понижения вынесен сюда; вызывать в useEffect, не в рендере.
+      refreshEntitlement: () => {
+        const { entitlement } = get();
+        if (entitlement.tier === 'premium' && !isPremiumActive(entitlement)) {
+          set({
+            entitlement: {
+              ...entitlement,
+              tier: 'free',
+            },
+          });
+        }
       },
     }),
     {
