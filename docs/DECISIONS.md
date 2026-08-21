@@ -124,3 +124,15 @@
 - **Контекст**: В репозитории остались `examples/websocket` (демо шаблона) и пустая `mini-services/`.
 - **Решение**: Удалены. `data/` (рантайм SQLite) добавлен в .gitignore. `bun.lock` оставлен рядом с package-lock (не трогаем чужое без запроса).
 - **Статус**: OK
+
+---
+
+## 2026-08-21: SEO для PWA
+- **Контекст**: PWA (SPA на `/`) плохо индексируется: один роут, нет контента для роботов и sitemap.
+- **Решение**:
+  - Расширенные метаданные в layout: title/description/keywords, Open Graph (ru_RU), Twitter card, canonical, JSON-LD SoftwareApplication (HealthApplication, цена 0).
+  - 3 индексируемые SSG-статьи (роуты `/articles/[slug]`): «Паническая атака: что делать», «Дневник мыслей», «Лестница смелости» — с JSON-LD Article + FAQPage, хлебными крошками, CTA на приложение и дисклеймером. Контент отвечает на реальные пользовательские запросы.
+  - `sitemap.ts` (главная + статьи, приоритеты) и `robots.txt` с ссылкой на sitemap.
+  - OG-обложка `public/og/cover.png` генерируется скриптом `scripts/generate-og.mjs` (sharp, без внешних зависимостей).
+  - `NEXT_PUBLIC_APP_URL` в env — прод-домен для canonical.
+- **Статус**: OK. REVIEW: домен `zabota.app` в дефолтах — заменить на реальный при деплое; статьи — стартовый набор, расширять по мере роста семантики.
