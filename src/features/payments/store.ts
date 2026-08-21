@@ -3,7 +3,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createPersistConfig } from '@/shared/lib/storage';
-import type { UserEntitlement, PaymentMethod } from '@/shared/schemas';
+import { getDeviceId } from '@/shared/lib/device-id';
+import type { UserEntitlement } from '@/shared/schemas';
 
 const FREE_FEATURES = new Set([
   'journal',
@@ -15,17 +16,17 @@ const FREE_FEATURES = new Set([
 ]);
 
 const GRACE_PERIOD_MS = 3 * 24 * 60 * 60 * 1000; // 3 дня
-const TRIAL_DAYS = 7;
-const SUBSCRIPTION_DAYS = 30;
 
 interface PaymentStore {
   entitlement: UserEntitlement;
-  startTrial: () => void;
-  activatePremium: (method: PaymentMethod) => void;
   checkEntitlement: (key: string) => boolean;
   isPremium: () => boolean;
   /** Побочный эффект: понижает тариф до free, если подписка истекла и льготный период прошёл. */
   refreshEntitlement: () => void;
+  /** Синхронизация подписки с сервером (источник истины). */
+  syncFromServer: () => Promise<void>;
+  /** Старт триала через сервер (только один раз на устройство). */
+  startTrialServer: () => Promise<boolean>;
 }
 
 function isExpired(expiresAt: string | undefined): boolean {
@@ -46,6 +47,22 @@ function isPremiumActive(entitlement: UserEntitlement): boolean {
   return isInGracePeriod(entitlement.expiresAt);
 }
 
+interface ServerEntitlementPayload {
+  tier: 'free' | 'premium';
+  expiresAt: string | null;
+  trialStartedAt: string | null;
+  trialUsed: boolean;
+}
+
+function fromServer(data: ServerEntitlementPayload): UserEntitlement {
+  return {
+    tier: data.tier,
+    expiresAt: data.expiresAt ?? undefined,
+    trialStartedAt: data.trialStartedAt ?? undefined,
+    trialUsed: data.trialUsed,
+  };
+}
+
 export const usePaymentStore = create<PaymentStore>()(
   persist(
     (set, get) => ({
@@ -54,31 +71,6 @@ export const usePaymentStore = create<PaymentStore>()(
         expiresAt: undefined,
         trialStartedAt: undefined,
         trialUsed: false,
-      },
-
-      startTrial: () => {
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-        set({
-          entitlement: {
-            tier: 'premium',
-            expiresAt: expiresAt.toISOString(),
-            trialStartedAt: now.toISOString(),
-            trialUsed: true,
-          },
-        });
-      },
-
-      activatePremium: () => {
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000);
-        set({
-          entitlement: {
-            ...get().entitlement,
-            tier: 'premium',
-            expiresAt: expiresAt.toISOString(),
-          },
-        });
       },
 
       // Чистая проверка — безопасна для вызова во время рендера.
@@ -100,6 +92,37 @@ export const usePaymentStore = create<PaymentStore>()(
               tier: 'free',
             },
           });
+        }
+      },
+
+      syncFromServer: async () => {
+        const deviceId = getDeviceId();
+        if (!deviceId) return;
+        try {
+          const res = await fetch(`/api/entitlement?deviceId=${encodeURIComponent(deviceId)}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const data = (await res.json()) as ServerEntitlementPayload;
+          set({ entitlement: fromServer(data) });
+        } catch {
+          // Офлайн/сеть недоступна — остаёмся на локальном кэше.
+        }
+      },
+
+      startTrialServer: async () => {
+        const deviceId = getDeviceId();
+        if (!deviceId) return false;
+        try {
+          const res = await fetch('/api/payments/trial', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deviceId }),
+          });
+          if (!res.ok) return false;
+          const data = (await res.json()) as ServerEntitlementPayload;
+          set({ entitlement: fromServer(data) });
+          return true;
+        } catch {
+          return false;
         }
       },
     }),

@@ -35,21 +35,38 @@ const item: Variants = {
 export function PaywallScreen() {
   const entitlement = usePaymentStore((s) => s.entitlement);
   const isPremium = usePaymentStore((s) => s.isPremium);
-  const startTrial = usePaymentStore((s) => s.startTrial);
+  const startTrialServer = usePaymentStore((s) => s.startTrialServer);
+  const syncFromServer = usePaymentStore((s) => s.syncFromServer);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('yookassa_card');
+  const [trialLoading, setTrialLoading] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const { initiatePayment, processing } = usePayment();
   const back = useRouterStore((s) => s.back);
 
   const premium = isPremium();
   const showTrial = !entitlement.trialUsed;
 
-  const handleStartTrial = () => {
-    startTrial();
-    back();
+  const handleStartTrial = async () => {
+    setTrialLoading(true);
+    const ok = await startTrialServer();
+    setTrialLoading(false);
+    if (ok) {
+      back();
+    } else {
+      // Если сеть недоступна — не оставляем пользователя в тупике,
+      // показываем уведомление, базовый функционал всё равно доступен.
+      alert(texts.paywall.trialError);
+    }
   };
 
   const handlePay = () => {
     initiatePayment(selectedMethod);
+  };
+
+  const handleCheckStatus = async () => {
+    setCheckingStatus(true);
+    await syncFromServer();
+    setCheckingStatus(false);
   };
 
   return (
@@ -129,6 +146,7 @@ export function PaywallScreen() {
                 size="lg"
                 className="w-full"
                 onClick={handleStartTrial}
+                loading={trialLoading}
               >
                 {texts.paywall.startTrial}
               </ZButton>
@@ -139,15 +157,26 @@ export function PaywallScreen() {
           )}
 
           {!premium && !showTrial && (
-            <ZButton
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={handlePay}
-              loading={processing}
-            >
-              {texts.paywall.payNow} {texts.paywall.price}
-            </ZButton>
+            <>
+              <ZButton
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handlePay}
+                loading={processing}
+              >
+                {texts.paywall.payNow} {texts.paywall.price}
+              </ZButton>
+              <ZButton
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={handleCheckStatus}
+                loading={checkingStatus}
+              >
+                {texts.paywall.checkStatus}
+              </ZButton>
+            </>
           )}
 
           {premium && (

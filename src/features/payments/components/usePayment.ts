@@ -2,55 +2,64 @@
 
 import { useState, useCallback } from 'react';
 import { usePaymentStore } from '../store';
+import { useToast } from '@/shared/ui/ZToast';
+import { getDeviceId } from '@/shared/lib/device-id';
+import { texts } from '@/shared/constants/texts';
 import type { PaymentMethod } from '@/shared/schemas';
 
 /**
  * Хук для инициирования оплаты.
- * Сейчас все методы симулируют успех — в продакшене
- * здесь будет интеграция с YooKassa, СБП и т.д.
+ * Платёж создаётся на сервере (/api/payments):
+ * - с заданными YOOKASSA ключами — открывается страница оплаты YooKassa,
+ *   подписку активирует вебхук после успешной оплаты;
+ * - без ключей (dev) — сервер сразу активирует подписку, чтобы флоу можно было проверить локально.
  */
 export function usePayment() {
-  const activatePremium = usePaymentStore((s) => s.activatePremium);
   const [processing, setProcessing] = useState(false);
+  const { showToast } = useToast();
 
   const initiatePayment = useCallback(
-    (method: PaymentMethod) => {
-      switch (method) {
-        case 'yookassa_card': {
-          // В продакшене: открыть виджет YooKassa
-          setProcessing(true);
-          setTimeout(() => {
-            activatePremium(method);
-            setProcessing(false);
-          }, 1500);
-          break;
+    async (method: PaymentMethod) => {
+      const deviceId = getDeviceId();
+      if (!deviceId) return;
+
+      setProcessing(true);
+      try {
+        const res = await fetch('/api/payments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deviceId, method }),
+        });
+
+        const data = (await res.json()) as {
+          payment?: { dev?: boolean; confirmationUrl?: string | null };
+          error?: string;
+        };
+
+        if (!res.ok || data.error) {
+          showToast(data.error ?? texts.common.error, 'error');
+          return;
         }
-        case 'sbp': {
-          // В продакшене: открыть deep link СБП
-          setProcessing(true);
-          setTimeout(() => {
-            activatePremium(method);
-            setProcessing(false);
-          }, 1500);
-          break;
+
+        if (data.payment?.dev) {
+          // Тестовый режим: сервер уже активировал подписку.
+          await usePaymentStore.getState().syncFromServer();
+          showToast(texts.paywall.devActivated, 'success');
+          return;
         }
-        case 'manual_transfer': {
-          // Копируем реквизиты в буфер обмена
-          try {
-            navigator.clipboard.writeText('Реквизиты для перевода будут здесь');
-          } catch {
-            // Буфер обмена может быть недоступен
-          }
-          setProcessing(true);
-          setTimeout(() => {
-            activatePremium(method);
-            setProcessing(false);
-          }, 1500);
-          break;
+
+        if (data.payment?.confirmationUrl) {
+          // Режим продакшена: открываем страницу оплаты YooKassa.
+          window.open(data.payment.confirmationUrl, '_blank', 'noopener,noreferrer');
+          showToast(texts.paywall.paymentOpened, 'info');
         }
+      } catch {
+        showToast(texts.common.error, 'error');
+      } finally {
+        setProcessing(false);
       }
     },
-    [activatePremium],
+    [showToast],
   );
 
   return { initiatePayment, processing };
