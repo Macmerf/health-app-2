@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://zabota.app/sitemap.xml
+Sitemap: https://zabotapsy.ru/sitemap.xml

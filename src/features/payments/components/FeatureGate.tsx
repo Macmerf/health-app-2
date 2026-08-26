@@ -17,9 +17,10 @@ interface FeatureGateProps {
 }
 
 export function FeatureGate({ featureKey, children, fallback }: FeatureGateProps) {
-  const checkEntitlement = usePaymentStore((s) => s.checkEntitlement);
   const navigate = useRouterStore((s) => s.navigate);
-  const hasAccess = checkEntitlement(featureKey);
+  // Подписываемся на результат проверки, а не на ссылку функции —
+  // иначе компонент не перерисуется при смене entitlement (например, после триала).
+  const hasAccess = usePaymentStore((s) => s.checkEntitlement(featureKey));
 
   if (hasAccess) {
     return <>{children}</>;

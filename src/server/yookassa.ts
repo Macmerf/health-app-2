@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { envInt } from './entitlement';
+import { PLANS, type SubscriptionPlan } from './entitlement-logic';
 
 /**
  * Минимальная серверная интеграция с YooKassa (https://yookassa.ru/developers).
@@ -8,7 +8,6 @@ import { envInt } from './entitlement';
  */
 
 const YOOKASSA_API = 'https://api.yookassa.ru/v3/payments';
-
 export function yookassaConfigured(): boolean {
   return Boolean(process.env.YOOKASSA_SHOP_ID && process.env.YOOKASSA_SECRET_KEY);
 }
@@ -16,63 +15,96 @@ export function yookassaConfigured(): boolean {
 export interface CreatedPayment {
   id: string;
   status: string;
-  confirmationUrl: string | null;
+  /** Токен для инициализации виджета ЮKassa (confirmation.type=embedded). */
+  confirmationToken: string | null;
   dev: boolean;
 }
 
 export interface CreatePaymentInput {
   deviceId: string;
-  method: 'yookassa_card' | 'sbp' | 'manual_transfer';
+  method?: 'yookassa_card' | 'sbp' | 'manual_transfer' | 'widget';
+  /** Тарифный план: месяц / год / навсегда. */
+  plan?: SubscriptionPlan;
 }
 
-export async function createYookassaPayment({ deviceId, method }: CreatePaymentInput): Promise<CreatedPayment> {
+export async function createYookassaPayment({ deviceId, method, plan = 'month' }: CreatePaymentInput): Promise<CreatedPayment> {
   if (!yookassaConfigured()) {
     // dev-режим: платёж «успешен» сразу, подписка активируется через entitlement API
-    return { id: `dev-${Date.now()}`, status: 'succeeded', confirmationUrl: null, dev: true };
+    return { id: `dev-${Date.now()}`, status: 'succeeded', confirmationToken: null, dev: true };
   }
 
-  const priceRub = envInt('PRICE_RUB', 150);
-  const baseUrl = process.env.APP_BASE_URL ?? 'http://localhost:3000';
-  const methodName = method === 'yookassa_card' ? 'Банковская карта' : method === 'sbp' ? 'СБП' : 'Перевод по реквизитам';
+  const config = PLANS[plan];
+  const methodName = method === 'sbp' ? 'СБП' : method === 'manual_transfer' ? 'Перевод по реквизитам' : 'Виджет ЮKassa';
 
   const body = {
-    amount: { value: String(priceRub), currency: 'RUB' },
+    amount: { value: String(config.priceRub), currency: 'RUB' },
     capture: true,
-    description: `Забота+ — подписка на месяц (${methodName})`,
-    metadata: { deviceId, paymentMethod: method },
+    description: `ЗаботаPsy+ — подписка (${config.title}, ${methodName})`,
+    metadata: { deviceId, paymentMethod: method ?? 'widget', plan },
     confirmation: {
-      type: 'redirect',
-      return_url: `${baseUrl}/?payment=success`,
+      // embedded — оплата через виджет на нашей странице (без редиректа на ЮKassa)
+      type: 'embedded',
     },
   };
 
-  const res = await fetch(`${YOOKASSA_API}/payments`, {
+  const res = await fetch(`${YOOKASSA_API}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Basic ${Buffer.from(`${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`).toString('base64')}`,
-      'Idempotence-Key': `zabota-${deviceId}-${Date.now()}`,
+      'Idempotence-Key': `zabotapsy-${deviceId}-${Date.now()}`,
     },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
+    // 401 invalid_credentials — ключи от шлюза выплат (gateId) вместо магазина (shopId),
+    // либо неверный секретный ключ. Даём понятную подсказку вместо сырой ошибки.
+    if (res.status === 401) {
+      throw new Error(
+        'YooKassa отклонила ключи (401). Убедитесь, что YOOKASSA_SHOP_ID — это shopId магазина (не gateId шлюза выплат), а YOOKASSA_SECRET_KEY — секретный ключ из раздела «Интеграция — Ключи API» этого магазина.',
+      );
+    }
     throw new Error(`YooKassa create payment failed: ${res.status} ${text}`);
   }
 
   const data = (await res.json()) as {
     id: string;
     status: string;
-    confirmation?: { confirmation_url?: string };
+    confirmation?: { confirmation_token?: string };
   };
 
   return {
     id: data.id,
     status: data.status,
-    confirmationUrl: data.confirmation?.confirmation_url ?? null,
+    confirmationToken: data.confirmation?.confirmation_token ?? null,
     dev: false,
   };
+}
+
+export interface PaymentInfo {
+  id: string;
+  status: string;
+  paid: boolean;
+  metadata?: Record<string, string>;
+}
+
+/** Получить информацию о платеже у ЮKassa (для проверки статуса после оплаты виджетом). */
+export async function getPaymentInfo(paymentId: string): Promise<PaymentInfo> {
+  const res = await fetch(`${YOOKASSA_API}/${paymentId}`, {
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`).toString('base64')}`,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`YooKassa get payment failed: ${res.status} ${text}`);
+  }
+
+  const data = (await res.json()) as PaymentInfo;
+  return data;
 }
 
 /**

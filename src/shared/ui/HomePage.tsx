@@ -5,8 +5,10 @@ import { useRouterStore } from '@/shared/lib/stores';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
 import { texts } from '@/shared/constants/texts';
+import { ARTICLES } from '@/shared/constants/articles';
 import {
   BookOpen,
+  BookText,
   Footprints,
   Heart,
   Wind,
@@ -138,6 +140,31 @@ export function HomePage() {
               5-4-3-2-1: вернись в момент через органы чувств.
             </p>
           </ZCard>
+        </div>
+      </motion.div>
+
+      {/* SEO-статьи */}
+      <motion.div variants={item}>
+        <h2 className='text-lg font-medium text-foreground mb-1'>Почитать</h2>
+        <p className='text-sm text-muted-foreground mb-3'>
+          Короткие статьи о том, как поддержать себя при тревоге
+        </p>
+        <div className='flex flex-col gap-2'>
+          {ARTICLES.map((article) => (
+            <a
+              key={article.slug}
+              href={`/articles/${article.slug}`}
+              className='flex items-start gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/30 transition-colors'
+            >
+              <div className='mt-0.5 flex-shrink-0 w-9 h-9 rounded-xl bg-lavender/15 flex items-center justify-center'>
+                <BookText size={18} className='text-lavender' strokeWidth={1.5} />
+              </div>
+              <div className='flex-1 min-w-0'>
+                <p className='text-sm font-medium text-foreground'>{article.title}</p>
+                <p className='text-xs text-muted-foreground mt-0.5 leading-relaxed'>{article.description}</p>
+              </div>
+            </a>
+          ))}
         </div>
       </motion.div>
 

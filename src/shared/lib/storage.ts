@@ -1,6 +1,6 @@
 import { get, set, del } from 'idb-keyval';
 
-const STORAGE_PREFIX = 'zabota_';
+const STORAGE_PREFIX = 'zabotapsy_';
 
 export const storage = {
   async get<T>(key: string): Promise<T | undefined> {

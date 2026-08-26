@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { articles, getArticle } from '../data';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabota.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!article) return {};
 
   return {
-    title: `${article.title} — Забота`,
+    title: `${article.title} — ЗаботаPsy`,
     description: article.description,
     keywords: article.keywords,
     alternates: { canonical: `${APP_URL}/articles/${article.slug}` },
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       locale: 'ru_RU',
       url: `${APP_URL}/articles/${article.slug}`,
-      siteName: 'Забота — поддержка при тревоге',
+      siteName: 'ЗаботаPsy — поддержка при тревоге',
       title: article.title,
       description: article.description,
       publishedTime: article.date,
@@ -49,8 +49,8 @@ function ArticleJsonLd({ slug, title, description, date }: { slug: string; title
         dateModified: date,
         inLanguage: 'ru',
         mainEntityOfPage: `${APP_URL}/articles/${slug}`,
-        author: { '@type': 'Organization', name: 'Забота' },
-        publisher: { '@type': 'Organization', name: 'Забота' },
+        author: { '@type': 'Organization', name: 'ЗаботаPsy' },
+        publisher: { '@type': 'Organization', name: 'ЗаботаPsy' },
       },
     ],
   };
@@ -88,7 +88,7 @@ export default async function ArticlePage({ params }: Props) {
           <ol className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <li>
               <Link href="/" className="hover:text-primary transition-colors">
-                Забота
+                ЗаботаPsy
               </Link>
             </li>
             <li aria-hidden="true">/</li>
@@ -146,7 +146,7 @@ export default async function ArticlePage({ params }: Props) {
           {/* CTA на установку */}
           <aside className="rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
             <h2 className="text-lg font-semibold text-foreground mb-2">
-              Попробуй упражнения в приложении «Забота»
+              Попробуй упражнения в приложении «ЗаботаPsy»
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Дневник мыслей, лестница смелости и план заботы — бесплатно и без интернета.

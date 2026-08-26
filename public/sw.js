@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zabota-v2';
+const CACHE_NAME = 'zabotapsy-v1';
 
 const STATIC_ASSETS = [
   '/',

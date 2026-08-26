@@ -1,5 +1,5 @@
 /**
- * Генератор OG-обложки «Заботы» для соцсетей и мессенджеров.
+ * Генератор OG-обложки «ЗаботаPsy» для соцсетей и мессенджеров.
  * Создаёт public/og/cover.png (1200x630) с логотипом и названием.
  * Запуск: node scripts/generate-og.mjs
  */
@@ -42,7 +42,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
   </g>
 
   <!-- Название -->
-  <text x="430" y="330" font-family="'Onest', 'Segoe UI', Arial, sans-serif" font-size="72" font-weight="600" fill="${TEXT}">Забота</text>
+   <text x="430" y="330" font-family="'Onest', 'Segoe UI', Arial, sans-serif" font-size="72" font-weight="600" fill="${TEXT}">ЗаботаPsy</text>
   <text x="430" y="400" font-family="'Onest', 'Segoe UI', Arial, sans-serif" font-size="32" font-weight="400" fill="#6B6A68">поддержка при тревоге</text>
 
   <!-- Фичи -->

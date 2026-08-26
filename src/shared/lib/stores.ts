@@ -39,7 +39,7 @@ export const useRouterStore = create<RouterStore>()(
       },
     }),
     {
-      name: 'zabota-router',
+      name: 'zabotapsy-router',
       storage: createJSONStorage(() => ({
         getItem: async () => null,
         setItem: async () => {},
@@ -89,7 +89,7 @@ export const useThemeStore = create<ThemeStore>()(
       },
     }),
     {
-      name: 'zabota-theme',
+      name: 'zabotapsy-theme',
       storage: createJSONStorage(() => ({
         getItem: async (key) => localStorage.getItem(key),
         setItem: async (key, value) => localStorage.setItem(key, value),
@@ -131,8 +131,8 @@ export const useMoodStore = create<MoodStore>()(
         get().entries.filter((e) => e.date >= start && e.date <= end),
     }),
     {
-      name: 'zabota-mood',
-      storage: createJSONStorage(() => createPersistConfig('zabota-mood').storage),
+      name: 'zabotapsy-mood',
+      storage: createJSONStorage(() => createPersistConfig('zabotapsy-mood').storage),
       partialize: (s) => ({ entries: s.entries }),
     },
   )
@@ -163,8 +163,8 @@ export const useCareTreeStore = create<CareTreeStore>()(
       },
     }),
     {
-      name: 'zabota-care-tree',
-      storage: createJSONStorage(() => createPersistConfig('zabota-care-tree').storage),
+      name: 'zabotapsy-care-tree',
+      storage: createJSONStorage(() => createPersistConfig('zabotapsy-care-tree').storage),
       partialize: (s) => ({ totalPractices: s.totalPractices }),
     },
   )

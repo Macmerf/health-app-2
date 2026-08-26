@@ -35,7 +35,7 @@ export function DataExport() {
         lines.push(`${date},${esc(e.situation)},${esc(e.thoughts)},${esc(e.physical || '')},${e.sudsBefore ?? ''},${e.sudsAfter ?? ''},${esc(e.newView || '')}`);
       }
 
-      downloadBlob(lines.join('\n'), `zabota-dnevnik-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+      downloadBlob(lines.join('\n'), `zabotapsy-dnevnik-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
       setExported('csv');
     } catch (err) {
       console.error('Export error', err);
@@ -49,7 +49,7 @@ export function DataExport() {
       const esc = (s: string) => `"${(s || '').replace(/"/g, '""')}"`;
       lines.push(`${e.date},${e.mood},${esc(e.note || '')}`);
     }
-    downloadBlob(lines.join('\n'), `zabota-nastroenie-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+    downloadBlob(lines.join('\n'), `zabotapsy-nastroenie-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
     setExported('mood');
   };
 

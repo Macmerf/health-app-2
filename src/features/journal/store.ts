@@ -43,8 +43,8 @@ export const useJournalStore = create<JournalStore>()(
       },
     }),
     {
-      name: 'zabota-journal',
-      storage: createJSONStorage(() => createPersistConfig('zabota-journal').storage),
+      name: 'zabotapsy-journal',
+      storage: createJSONStorage(() => createPersistConfig('zabotapsy-journal').storage),
       partialize: (state) => ({ entries: state.entries }),
       // Миграция старых записей: patternId/patternName → emotionId/emotionName
       merge: (persistedState, currentState) => {

@@ -6,7 +6,7 @@ import { useRouterStore } from '@/shared/lib/stores';
 import { clsx } from 'clsx';
 
 const ROUTE_TITLES: Record<string, string> = {
-  home: 'Забота',
+  home: 'ЗаботаPsy',
   journal: 'История записей',
   'journal-new': 'Новая запись',
   exposure: 'Лестница смелости',
@@ -32,7 +32,7 @@ export function ZHeader({ title, className }: ZHeaderProps) {
   const route = useRouterStore((s) => s.route);
   const back = useRouterStore((s) => s.back);
   const isHome = route === 'home';
-  const displayTitle = title ?? ROUTE_TITLES[route] ?? 'Забота';
+  const displayTitle = title ?? ROUTE_TITLES[route] ?? 'ЗаботаPsy';
 
   return (
     <header

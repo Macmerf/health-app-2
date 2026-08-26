@@ -127,8 +127,8 @@ export const usePaymentStore = create<PaymentStore>()(
       },
     }),
     {
-      name: 'zabota-entitlements',
-      storage: createJSONStorage(() => createPersistConfig('zabota-entitlements').storage),
+      name: 'zabotapsy-entitlements',
+      storage: createJSONStorage(() => createPersistConfig('zabotapsy-entitlements').storage),
       partialize: (state) => ({ entitlement: state.entitlement }),
     },
   ),

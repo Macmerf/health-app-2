@@ -32,9 +32,9 @@ export const useCarePlanStore = create<CarePlanStore>()(
       },
     }),
     {
-      name: 'zabota-careplan',
+      name: 'zabotapsy-careplan',
       storage: createJSONStorage(() =>
-        createPersistConfig('zabota-careplan').storage,
+        createPersistConfig('zabotapsy-careplan').storage,
       ),
       partialize: (state) => ({
         fatigueSigns: state.fatigueSigns,

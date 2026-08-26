@@ -1,10 +1,14 @@
 import { getSubscription, upsertSubscription } from './db';
 import {
+  FOREVER_EXPIRES_AT,
   isExpiredBeyondGrace,
+  isSubscriptionPlan,
+  PLANS,
   rowToEntitlement,
   subscriptionExpiry,
   trialExpiry,
   type ServerEntitlement,
+  type SubscriptionPlan,
 } from './entitlement-logic';
 
 export * from './entitlement-logic';
@@ -62,11 +66,20 @@ export function startTrialForDevice(deviceId: string): ServerEntitlement {
   return { tier: 'premium', expiresAt, trialStartedAt: now, trialUsed: true };
 }
 
-/** Активация подписки после успешной оплаты (30 дней от текущего момента). */
-export function activateSubscription(deviceId: string, method: string): ServerEntitlement {
+/**
+ * Активация подписки после успешной оплаты.
+ * Дни добавляются к текущему сроку, если подписка ещё активна (продление).
+ * План «forever» устанавливает бессрочную подписку.
+ */
+export function activateSubscription(deviceId: string, method: string, plan: SubscriptionPlan = 'month'): ServerEntitlement {
   const now = new Date().toISOString();
-  const expiresAt = subscriptionExpiry(Date.now());
   const existing = getSubscription(deviceId);
+
+  // Дата истечения: для активной подписки — продление, для «навсегда» — бессрочно.
+  const expiresAt =
+    plan === 'forever'
+      ? FOREVER_EXPIRES_AT
+      : subscriptionExpiry(Date.now(), plan, existing?.expires_at);
 
   upsertSubscription({
     device_id: deviceId,
@@ -77,4 +90,49 @@ export function activateSubscription(deviceId: string, method: string): ServerEn
     updated_at: now,
   });
   return { tier: 'premium', expiresAt, trialStartedAt: existing?.trial_started_at ?? null, trialUsed: Boolean(existing?.trial_started_at) };
+}
+
+/**
+ * Активация подписки после успешной оплаты с защитой от двойной активации.
+ * Если этот платёж уже активировал подписку — просто возвращаем текущее состояние,
+ * не продлевая срок повторно.
+ */
+export function activateSubscriptionForPayment(
+  deviceId: string,
+  method: string,
+  paymentId: string,
+  plan: SubscriptionPlan = 'month',
+): ServerEntitlement {
+  const existing = getSubscription(deviceId);
+
+  // Этот платёж уже был обработан — не продлеваем подписку повторно.
+  if (existing?.last_payment_id === paymentId) {
+    return getServerEntitlement(deviceId);
+  }
+
+  const entitlement = activateSubscription(deviceId, method, plan);
+  upsertSubscription({
+    device_id: deviceId,
+    tier: 'premium',
+    trial_started_at: existing?.trial_started_at ?? null,
+    expires_at: entitlement.expiresAt ?? null,
+    payment_method: method,
+    updated_at: new Date().toISOString(),
+    last_payment_id: paymentId,
+  });
+  return entitlement;
+}
+
+/** Нормализация плана из метаданных платежа. */
+export function planFromMetadata(value: string | undefined): SubscriptionPlan {
+  return value && isSubscriptionPlan(value) ? value : 'month';
+}
+
+/** Публичное описание тарифов для клиента. */
+export function plansForClient() {
+  return (Object.keys(PLANS) as SubscriptionPlan[]).map((id) => ({
+    id,
+    title: PLANS[id].title,
+    priceRub: PLANS[id].priceRub,
+  }));
 }

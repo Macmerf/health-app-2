@@ -8,10 +8,13 @@ import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
 import { texts } from '@/shared/constants/texts';
 import { FeatureGuide } from '@/shared/ui/FeatureGuide';
+import { useCareTreeStore } from '@/shared/lib/stores';
 
 const INHALE_DURATION = 4; // seconds
 const EXHALE_DURATION = 4; // seconds
 const CYCLE_DURATION = INHALE_DURATION + EXHALE_DURATION;
+/** Минимальное время дыхания, чтобы практика засчиталась в дерево заботы. */
+const MIN_PRACTICE_SECONDS = 30;
 
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
@@ -23,6 +26,9 @@ export function BreathingExercise() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const addPractice = useCareTreeStore((s) => s.addPractice);
+  // Практика засчитывается один раз за сессию — при остановке, если подышали достаточно.
+  const practiceCountedRef = useRef(false);
 
   // Determine current phase within the 8-second cycle
   const cyclePosition = elapsed % CYCLE_DURATION;
@@ -39,7 +45,11 @@ export function BreathingExercise() {
     // Reset to beginning of cycle on pause
     const cyclesCompleted = Math.floor(elapsed / CYCLE_DURATION);
     setElapsed(cyclesCompleted * CYCLE_DURATION);
-  }, [elapsed]);
+    if (!practiceCountedRef.current && elapsed >= MIN_PRACTICE_SECONDS) {
+      practiceCountedRef.current = true;
+      addPractice();
+    }
+  }, [elapsed, addPractice]);
 
   // Reset completely
   const handleReset = useCallback(() => {

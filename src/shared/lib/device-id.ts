@@ -1,6 +1,6 @@
 'use client';
 
-const STORAGE_KEY = 'zabota-device-id';
+const STORAGE_KEY = 'zabotapsy-device-id';
 
 let cached: string | null = null;
 

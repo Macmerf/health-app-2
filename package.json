@@ -1,5 +1,5 @@
 {
-  "name": "zabota",
+  "name": "zabotapsy",
   "version": "0.2.1",
   "private": true,
   "scripts": {
@@ -79,6 +79,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@bubblewrap/cli": "^1.25.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/react": "^19",

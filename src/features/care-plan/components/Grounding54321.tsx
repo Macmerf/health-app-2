@@ -10,6 +10,7 @@ import { ZButton } from '@/shared/ui/ZButton';
 import { ZProgressBar } from '@/shared/ui/ZProgressBar';
 import { texts } from '@/shared/constants/texts';
 import { FeatureGuide } from '@/shared/ui/FeatureGuide';
+import { useCareTreeStore } from '@/shared/lib/stores';
 
 // --- Step configuration ---
 interface GroundingStep {
@@ -70,6 +71,7 @@ const stepVariants = {
 export function Grounding54321() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const addPractice = useCareTreeStore((s) => s.addPractice);
   // Values keyed by step index: stepIndex -> array of string values
   const [values, setValues] = useState<Record<number, string[]>>(() => {
     const initial: Record<number, string[]> = {};
@@ -95,8 +97,9 @@ export function Grounding54321() {
       setCurrentStep((s) => s + 1);
     } else {
       setIsComplete(true);
+      addPractice();
     }
-  }, [currentStep]);
+  }, [currentStep, addPractice]);
 
   const handleReset = useCallback(() => {
     setCurrentStep(0);

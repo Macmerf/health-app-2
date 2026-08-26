@@ -78,8 +78,12 @@ export const UserEntitlementSchema = z.object({
 });
 export type UserEntitlement = z.infer<typeof UserEntitlementSchema>;
 
-export const PaymentMethodSchema = z.enum(['yookassa_card', 'sbp', 'manual_transfer']);
+export const PaymentMethodSchema = z.enum(['yookassa_card', 'sbp', 'manual_transfer', 'widget']);
 export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
+
+/** Тарифный план подписки: месяц (+30 дней), год (+365 дней), навсегда (бессрочно). */
+export const SubscriptionPlanSchema = z.enum(['month', 'year', 'forever']);
+export type SubscriptionPlan = z.infer<typeof SubscriptionPlanSchema>;
 
 export const MoodEntrySchema = z.object({
   date: z.string(),

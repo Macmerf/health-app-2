@@ -26,7 +26,7 @@ const MENU_ITEMS = [
   { route: 'body-scan' as AppRoute, label: 'Сканирование тела', icon: <Scan size={20} strokeWidth={1.5} />, premium: true },
   { route: 'notifications' as AppRoute, label: 'Уведомления', icon: <Bell size={20} strokeWidth={1.5} />, premium: true },
   { route: 'export' as AppRoute, label: 'Экспорт данных', icon: <Download size={20} strokeWidth={1.5} />, premium: true },
-  { route: 'paywall' as AppRoute, label: 'Забота+', icon: <Sparkles size={20} strokeWidth={1.5} />, premium: false },
+  { route: 'paywall' as AppRoute, label: 'ЗаботаPsy+', icon: <Sparkles size={20} strokeWidth={1.5} />, premium: false },
   { route: 'settings' as AppRoute, label: 'Настройки', icon: <Settings size={20} strokeWidth={1.5} />, premium: false },
 ];
 
@@ -59,7 +59,7 @@ export function ZBottomNav() {
 
   return (
     <nav
-      className='fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card safe-bottom'
+      className='fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card safe-bottom lg:hidden'
       role='navigation'
       aria-label='Основная навигация'
     >

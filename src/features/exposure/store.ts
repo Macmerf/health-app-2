@@ -58,9 +58,9 @@ export const useExposureStore = create<ExposureStore>()(
       },
     }),
     {
-      name: 'zabota-exposure',
+      name: 'zabotapsy-exposure',
       storage: createJSONStorage(() =>
-        createPersistConfig('zabota-exposure').storage,
+        createPersistConfig('zabotapsy-exposure').storage,
       ),
       partialize: (state) => ({
         hierarchies: state.hierarchies,

@@ -2,9 +2,14 @@
 
 import { useRouterStore, useThemeStore } from '@/shared/lib/stores';
 import { ZBottomNav } from '@/shared/ui/ZBottomNav';
+import { ZDesktopNav } from '@/shared/ui/ZDesktopNav';
 import { ZToastContainer } from '@/shared/ui/ZToast';
 import { PageTransition } from '@/shared/ui/PageTransition';
-import { PremiumFab } from '@/shared/ui/PremiumFab';
+import dynamic from 'next/dynamic';
+
+const PremiumFab = dynamic(() => import('@/shared/ui/PremiumFab').then(m => ({ default: m.PremiumFab })), {
+  ssr: false,
+});
 import { texts } from '@/shared/constants/texts';
 
 import { HomePage } from '@/shared/ui/HomePage';
@@ -49,9 +54,8 @@ function SettingsPage() {
   const theme = useThemeStore((s) => s.theme);
   const navigate = useRouterStore((s) => s.navigate);
   const resetOnboarding = useOnboardingStore((s) => s.resetOnboarding);
-  const isPremium = usePaymentStore((s) => s.isPremium);
-
-  const premium = isPremium();
+  // Подписка на результат, а не на ссылку функции — для мгновенного обновления статуса.
+  const premium = usePaymentStore((s) => s.isPremium());
 
   return (
     <div className='flex flex-col gap-4'>
@@ -203,6 +207,26 @@ function SettingsPage() {
         <p className='text-xs text-muted-foreground text-center mt-1'>
           {texts.settings.footerDisclaimer}
         </p>
+        <p className='text-xs text-muted-foreground text-center mt-2'>
+          <a
+            href="/articles"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-primary transition-colors"
+          >
+            Статьи о тревоге и самоподдержке
+          </a>
+        </p>
+        <p className='text-xs text-muted-foreground text-center mt-1'>
+          <a
+            href="/oferta"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-primary transition-colors"
+          >
+            Публичная оферта ЗаботаPsy+
+          </a>
+        </p>
       </div>
     </div>
   );
@@ -270,9 +294,12 @@ function Router() {
 
   return (
     <div className='min-h-screen flex flex-col'>
+      {/* Десктопная навигация (lg+), таб-бар скрыт через CSS */}
+      <ZDesktopNav />
+
       {showHeader && <ZHeader />}
 
-      <main className='flex-1 px-8 py-6 pb-24 max-w-lg mx-auto w-full'>
+      <main className='flex-1 px-8 py-6 pb-24 lg:pb-8 max-w-lg lg:max-w-3xl mx-auto w-full'>
         <PageTransition routeKey={route}>
           {renderRoute()}
         </PageTransition>

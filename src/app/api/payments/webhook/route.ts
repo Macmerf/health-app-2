@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyWebhook } from '@/server/yookassa';
-import { activateSubscription, type ServerEntitlement } from '@/server/entitlement';
+import { activateSubscriptionForPayment, planFromMetadata, type ServerEntitlement } from '@/server/entitlement';
 
 export const runtime = 'nodejs';
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   let payload: {
     event?: string;
-    object?: { metadata?: { deviceId?: string; paymentMethod?: string } };
+    object?: { id?: string; metadata?: { deviceId?: string; paymentMethod?: string; plan?: string } };
   };
   try {
     payload = JSON.parse(rawBody);
@@ -27,13 +27,16 @@ export async function POST(request: Request) {
   }
 
   const deviceId = payload.object?.metadata?.deviceId;
-  const method = payload.object?.metadata?.paymentMethod ?? 'yookassa_card';
+  const paymentId = payload.object?.id;
+  const method = payload.object?.metadata?.paymentMethod ?? 'widget';
+  const plan = planFromMetadata(payload.object?.metadata?.plan);
 
   if (!deviceId || payload.event !== 'payment.succeeded') {
     // Событие не связано с подпиской — отвечаем 200, чтобы не было ретраев.
     return NextResponse.json({ ok: true });
   }
 
-  const entitlement: ServerEntitlement = activateSubscription(deviceId, method);
+  // Идемпотентно: повторный вебхук по тому же платежу не продлит подписку.
+  const entitlement: ServerEntitlement = activateSubscriptionForPayment(deviceId, method, paymentId ?? 'webhook', plan);
   return NextResponse.json({ ok: true, entitlement });
 }

@@ -2,12 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppShell } from "@/shared/ui/app-shell";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://zabota.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://zabotapsy.ru";
 
 const appJsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Забота",
+  name: "ЗаботаPsy",
   applicationCategory: "HealthApplication",
   operatingSystem: "Web, Android, iOS",
   url: APP_URL,
@@ -23,9 +23,9 @@ const appJsonLd = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  title: "Забота — поддержка при тревоге",
+  title: "ЗаботаPsy — поддержка при тревоге",
   description:
-    "Забота — PWA для поддержки при тревоге: дневник эмоций, лестница смелости, план заботы. Работает офлайн, базовые упражнения всегда бесплатны.",
+    "ЗаботаPsy — PWA для поддержки при тревоге: дневник эмоций, лестница смелости, план заботы. Работает офлайн, базовые упражнения всегда бесплатны.",
   keywords: [
     "тревога",
     "панические атаки",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Забота",
+    title: "ЗаботаPsy",
   },
   icons: {
     icon: "/icons/icon-192.png",
@@ -52,15 +52,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ru_RU",
     url: APP_URL,
-    siteName: "Забота — поддержка при тревоге",
-    title: "Забота — поддержка при тревоге",
+    siteName: "ЗаботаPsy — поддержка при тревоге",
+    title: "ЗаботаPsy — поддержка при тревоге",
     description:
       "Дневник мыслей, лестница смелости и план заботы. Работает без интернета.",
-    images: [{ url: "/og/cover.png", width: 1200, height: 630, alt: "Забота — поддержка при тревоге" }],
+    images: [{ url: "/og/cover.png", width: 1200, height: 630, alt: "ЗаботаPsy — поддержка при тревоге" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Забота — поддержка при тревоге",
+    title: "ЗаботаPsy — поддержка при тревоге",
     description:
       "Дневник мыслей, лестница смелости, план заботы. Офлайн-first, базовые функции всегда бесплатны.",
     images: ["/og/cover.png"],

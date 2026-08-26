@@ -2,22 +2,17 @@
 
 import React, { useState } from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
-import { ZSegmentedControl } from '@/shared/ui/ZSegmentedControl';
 import { ZBadge } from '@/shared/ui/ZBadge';
 import { usePaymentStore } from '../store';
 import { usePayment } from './usePayment';
+import { YookassaWidget } from './YookassaWidget';
 import { useRouterStore } from '@/shared/lib/stores';
 import { texts } from '@/shared/constants/texts';
-import type { PaymentMethod } from '@/shared/schemas';
-
-const PAYMENT_OPTIONS = [
-  { value: 'yookassa_card' as PaymentMethod, label: texts.paywall.yookassaCard },
-  { value: 'sbp' as PaymentMethod, label: texts.paywall.sbp },
-  { value: 'manual_transfer' as PaymentMethod, label: texts.paywall.manualTransfer },
-];
+import { FOREVER_EXPIRES_AT } from '@/shared/constants/plans';
+import type { SubscriptionPlan } from '@/shared/schemas';
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -34,17 +29,20 @@ const item: Variants = {
 
 export function PaywallScreen() {
   const entitlement = usePaymentStore((s) => s.entitlement);
-  const isPremium = usePaymentStore((s) => s.isPremium);
   const startTrialServer = usePaymentStore((s) => s.startTrialServer);
   const syncFromServer = usePaymentStore((s) => s.syncFromServer);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('yookassa_card');
   const [trialLoading, setTrialLoading] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
-  const { initiatePayment, processing } = usePayment();
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>('month');
+  // Состояние виджета: токен создаётся при клике «Оплатить».
+  const [widget, setWidget] = useState<{ confirmationToken: string; paymentId: string | null } | null>(null);
+  const { createPayment, processing } = usePayment();
   const back = useRouterStore((s) => s.back);
 
-  const premium = isPremium();
+  // Подписка на результат, а не на ссылку функции — для мгновенного обновления статуса.
+  const premium = usePaymentStore((s) => s.isPremium());
   const showTrial = !entitlement.trialUsed;
+  const isForever = entitlement.expiresAt === FOREVER_EXPIRES_AT;
 
   const handleStartTrial = async () => {
     setTrialLoading(true);
@@ -59,8 +57,20 @@ export function PaywallScreen() {
     }
   };
 
-  const handlePay = () => {
-    initiatePayment(selectedMethod);
+  const handlePay = async (plan: SubscriptionPlan) => {
+    const result = await createPayment(plan);
+    // null — dev-режим (подписка уже активирована) или ошибка (toast уже показан).
+    if (result) {
+      setWidget(result);
+    }
+  };
+
+  const handleWidgetSuccess = () => {
+    setWidget(null);
+  };
+
+  const handleWidgetCancel = () => {
+    setWidget(null);
   };
 
   const handleCheckStatus = async () => {
@@ -68,6 +78,35 @@ export function PaywallScreen() {
     await syncFromServer();
     setCheckingStatus(false);
   };
+
+  // Режим оплаты: показываем виджет ЮKassa вместо списка функций
+  if (widget) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <div className="flex-1 px-4 py-6 max-w-lg mx-auto w-full space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-foreground">
+              {texts.paywall.paymentTitle}
+            </p>
+            <ZButton variant="ghost" size="sm" onClick={handleWidgetCancel}>
+              {texts.common.back}
+            </ZButton>
+          </div>
+          <ZCard>
+            <YookassaWidget
+              confirmationToken={widget.confirmationToken}
+              paymentId={widget.paymentId}
+              onSuccess={handleWidgetSuccess}
+              onCancel={handleWidgetCancel}
+            />
+          </ZCard>
+          <p className="text-xs text-muted-foreground text-center">
+            {texts.paywall.widgetNote}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -112,30 +151,40 @@ export function PaywallScreen() {
           ))}
         </motion.div>
 
-        {/* Цена */}
-        <motion.div variants={item} className="text-center">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles size={20} className="text-primary" strokeWidth={1.5} />
-            <span className="text-2xl font-bold text-foreground">
-              {texts.paywall.price}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Способ оплаты */}
-        <motion.div variants={item} className="space-y-3">
-          <p className="text-sm font-medium text-foreground text-center">
-            {texts.paywall.paymentMethod}
-          </p>
-          <div className="w-full">
-            <ZSegmentedControl
-              options={PAYMENT_OPTIONS}
-              value={selectedMethod}
-              onChange={setSelectedMethod}
-              ariaLabel={texts.paywall.paymentMethod}
-            />
-          </div>
-        </motion.div>
+        {/* Тарифы */}
+        {!isForever && (
+          <motion.div variants={item} className="space-y-2">
+            {texts.paywall.plans.map((plan) => {
+              const active = selectedPlan === plan.id;
+              return (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => setSelectedPlan(plan.id)}
+                  aria-pressed={active}
+                  className={`w-full flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${
+                    active ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/30'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-foreground">{plan.title}</span>
+                    {plan.note && <span className="text-xs text-muted-foreground">{plan.note}</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">{plan.price}</span>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        active ? 'border-primary bg-primary' : 'border-muted-foreground/40'
+                      }`}
+                    >
+                      {active && <Check size={12} className="text-white" strokeWidth={3} />}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
 
         {/* Кнопки */}
         <motion.div variants={item} className="space-y-3">
@@ -156,16 +205,16 @@ export function PaywallScreen() {
             </>
           )}
 
-          {!premium && !showTrial && (
+          {!premium && !showTrial && !isForever && (
             <>
               <ZButton
                 variant="primary"
                 size="lg"
                 className="w-full"
-                onClick={handlePay}
+                onClick={() => handlePay(selectedPlan)}
                 loading={processing}
               >
-                {texts.paywall.payNow} {texts.paywall.price}
+                {texts.paywall.payNow} {texts.paywall.plans.find((p) => p.id === selectedPlan)?.price}
               </ZButton>
               <ZButton
                 variant="ghost"
@@ -179,7 +228,30 @@ export function PaywallScreen() {
             </>
           )}
 
-          {premium && (
+          {/* Продление активной подписки — дни добавляются к текущему сроку */}
+          {premium && !isForever && (
+            <>
+              <ZButton
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={() => handlePay(selectedPlan)}
+                loading={processing}
+              >
+                {texts.paywall.extendNow} {texts.paywall.plans.find((p) => p.id === selectedPlan)?.price}
+              </ZButton>
+              <ZButton
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                onClick={back}
+              >
+                {texts.common.close}
+              </ZButton>
+            </>
+          )}
+
+          {premium && isForever && (
             <ZButton
               variant="secondary"
               size="lg"
@@ -194,9 +266,22 @@ export function PaywallScreen() {
         {/* Без давления */}
         <motion.p
           variants={item}
-          className="text-center text-xs text-muted-foreground pb-4"
+          className="text-center text-xs text-muted-foreground pb-2"
         >
           {texts.paywall.noPressure}
+        </motion.p>
+
+        {/* Ссылка на оферту */}
+        <motion.p variants={item} className="text-center text-xs text-muted-foreground pb-4">
+          {texts.paywall.termsNote}{' '}
+          <a
+            href="/oferta"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-primary transition-colors"
+          >
+            «Публичная оферта ЗаботаPsy+»
+          </a>
         </motion.p>
       </motion.div>
     </div>

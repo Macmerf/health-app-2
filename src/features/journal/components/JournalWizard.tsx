@@ -17,7 +17,7 @@ import { ThoughtPatternSelector } from './ThoughtPatternSelector';
 import { useJournalStore } from '../store';
 import type { JournalEntry } from '@/shared/schemas';
 import type { ThoughtPattern } from '@/shared/schemas';
-import { useRouterStore } from '@/shared/lib/stores';
+import { useRouterStore, useCareTreeStore } from '@/shared/lib/stores';
 import { checkCrisisKeywords } from '@/shared/lib/crisis-detector';
 import { z } from 'zod/v4';
 import type { Emotion } from '../data/emotions';
@@ -75,6 +75,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
   const [sudsAfter, setSudsAfter] = useState(50);
 
   const addEntry = useJournalStore((s) => s.addEntry);
+  const addPractice = useCareTreeStore((s) => s.addPractice);
   const { showToast } = useToast();
   const navigate = useRouterStore((s) => s.navigate);
 
@@ -142,9 +143,10 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
       patternName: selectedPattern?.friendlyName,
     };
     addEntry(entry);
+    addPractice();
     showToast(texts.journal.saved, 'success');
     onComplete();
-  }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, selectedPattern, addEntry, showToast, onComplete]);
+  }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, selectedPattern, addEntry, addPractice, showToast, onComplete]);
 
   const progressLabels = useMemo(
     () => STEP_LABELS.map((label) => (label.length > 6 ? label.slice(0, 6) + '...' : label)),

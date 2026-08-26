@@ -46,9 +46,9 @@ const useNotificationSettingsStore = create<NotificationSettingsStore>()(
       setBreathingReminder: (value) => set({ breathingReminder: value }),
     }),
     {
-      name: 'zabota-notification-settings',
+      name: 'zabotapsy-notification-settings',
       storage: createJSONStorage(() =>
-        createPersistConfig('zabota-notification-settings').storage,
+        createPersistConfig('zabotapsy-notification-settings').storage,
       ),
       partialize: (state) => ({
         enabled: state.enabled,

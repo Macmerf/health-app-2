@@ -9,7 +9,7 @@ import { ZSlider } from '@/shared/ui/ZSlider';
 import { ZTextArea } from '@/shared/ui/ZTextArea';
 import { ZCard } from '@/shared/ui/ZCard';
 import { useToast } from '@/shared/ui/ZToast';
-import { useRouterStore } from '@/shared/lib/stores';
+import { useRouterStore, useCareTreeStore } from '@/shared/lib/stores';
 import { useExposureStore } from '../store';
 import { texts } from '@/shared/constants/texts';
 import { ExposureSessionSchema } from '@/shared/schemas';
@@ -36,6 +36,7 @@ export function ExposureSession() {
   const navigate = useRouterStore((s) => s.navigate);
   const hierarchies = useExposureStore((s) => s.hierarchies);
   const addSession = useExposureStore((s) => s.addSession);
+  const addPractice = useCareTreeStore((s) => s.addPractice);
   const { showToast } = useToast();
 
   const hierarchyId = params.hierarchyId ?? '';
@@ -152,9 +153,10 @@ export function ExposureSession() {
     }
 
     addSession(result.data);
+    addPractice();
     showToast(texts.exposure.sessionComplete, 'success');
     setPhase('done');
-  }, [hierarchyId, stepId, step, elapsedRef, currentSuds, sudsChecks, reflection, addSession, showToast]);
+  }, [hierarchyId, stepId, step, elapsedRef, currentSuds, sudsChecks, reflection, addSession, addPractice, showToast]);
 
   // Done — go back to exposure
   useEffect(() => {

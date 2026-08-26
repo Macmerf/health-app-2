@@ -47,7 +47,7 @@ export async function scheduleNotification(
           body,
           icon: '/icons/icon-192.png',
           badge: '/icons/icon-192.png',
-          tag: `zabota-${Date.now()}`,
+          tag: `zabotapsy-${Date.now()}`,
         });
       } catch {
         // Notification API не поддерживается или заблокирован

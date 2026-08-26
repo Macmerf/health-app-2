@@ -74,9 +74,9 @@ export const useGamificationStore = create<GamificationStore>()(
       },
     }),
     {
-      name: 'zabota-achievements',
+      name: 'zabotapsy-achievements',
       storage: createJSONStorage(() =>
-        createPersistConfig('zabota-achievements').storage,
+        createPersistConfig('zabotapsy-achievements').storage,
       ),
       partialize: (state) => ({
         unlockedIds: state.unlockedIds,

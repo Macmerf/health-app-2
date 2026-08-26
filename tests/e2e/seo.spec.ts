@@ -21,7 +21,7 @@ test('Индекс статей отдаёт список на русском', 
 });
 
 test('sitemap.xml содержит главную и статьи', async ({ request }) => {
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabota.app').replace(/\/$/, '');
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru').replace(/\/$/, '');
   const res = await request.get('/sitemap.xml');
   expect(res.status()).toBe(200);
   const xml = await res.text();

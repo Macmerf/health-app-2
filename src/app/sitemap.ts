@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { articles } from './articles/data';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabota.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
 
 /**
  * Sitemap «Заботы»: главная (SPA), все статьи и теги статей.
@@ -29,6 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.7,
+    },
+    {
+      url: `${APP_URL}/oferta`,
+      lastModified: now,
+      changeFrequency: 'yearly' as const,
+      priority: 0.3,
     },
     ...articleEntries,
   ];

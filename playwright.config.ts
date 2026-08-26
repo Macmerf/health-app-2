@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * E2E-конфигурация «Забота».
+ * E2E-конфигурация «ЗаботаPsy».
  * Запуск: npx playwright test
  * Dev-сервер поднимается автоматически на :3000.
  */
@@ -20,7 +20,9 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      // Мобильный вьюпорт: приложение в первую очередь PWA для телефона,
+      // все e2e-тесты написаны под мобильную навигацию (таб-бар, кнопка «Ещё»).
+      use: { ...devices['Pixel 7'] },
     },
   ],
   webServer: {

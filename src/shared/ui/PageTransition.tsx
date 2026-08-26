@@ -28,6 +28,7 @@ export function PageTransition({ routeKey, children }: PageTransitionProps) {
         animate='animate'
         exit='exit'
         transition={pageTransition}
+        suppressHydrationWarning
       >
         {children}
       </motion.div>

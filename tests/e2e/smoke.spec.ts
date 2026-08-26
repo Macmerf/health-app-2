@@ -1,7 +1,7 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 
 /**
- * Smoke-тесты «Забота».
+ * Smoke-тесты «ЗаботаPsy».
  * Запуск: npx playwright test
  * Dev-сервер поднимается автоматически.
  */
@@ -74,9 +74,9 @@ test('План заботы доступен через FAB за один тап
 });
 
 test('Оплата: триал активируется в dev-режиме', async ({ page }) => {
-  // Меню «Ещё» → Забота+
+  // Меню «Ещё» → ЗаботаPsy+
   await page.getByRole('button', { name: 'Ещё' }).click();
-  await page.getByRole('menuitem', { name: 'Забота+' }).click();
+  await page.getByRole('menuitem', { name: 'ЗаботаPsy+' }).click();
 
   await expect(page.getByText('Базовые инструменты всегда бесплатны')).toBeVisible();
 
@@ -85,6 +85,64 @@ test('Оплата: триал активируется в dev-режиме', as
 
   // Подписка активировалась
   await expect(page.getByText('Подписка активна')).toBeVisible({ timeout: 10000 });
+});
+
+test('Подписка: премиум-функции разблокируются сразу после триала', async ({ page }) => {
+  // Активируем триал через пейволл (после активации пейволл сам возвращает назад)
+  await page.getByRole('button', { name: 'Ещё' }).click();
+  await page.getByRole('menuitem', { name: 'ЗаботаPsy+' }).click();
+  await page.getByRole('button', { name: /Начать бесплатно/ }).click();
+  await expect(page.getByText('Твой спутник при тревоге')).toBeVisible({ timeout: 10000 });
+
+  // Дерево заботы (премиум) открывается без замка — без перезагрузки страницы
+  await page.getByRole('button', { name: 'Ещё' }).click();
+  await page.getByRole('menuitem', { name: 'Дерево заботы' }).click();
+  await expect(page.getByText('Каждая практика помогает дереву расти')).toBeVisible();
+  await expect(page.getByText(/доступна в ЗаботаPsy\+/)).toBeHidden();
+
+  // Premium FAB скрылся после активации подписки
+  await expect(page.getByRole('button', { name: 'ЗаботаPsy+', exact: true })).toBeHidden();
+});
+
+test('Дерево заботы: запись в дневнике засчитывается как практика', async ({ page }) => {
+  // Активируем триал, чтобы дерево было доступно
+  await page.getByRole('button', { name: 'Ещё' }).click();
+  await page.getByRole('menuitem', { name: 'ЗаботаPsy+' }).click();
+  await page.getByRole('button', { name: /Начать бесплатно/ }).click();
+  await expect(page.getByText('Твой спутник при тревоге')).toBeVisible({ timeout: 10000 });
+
+  // Создаём запись в дневнике
+  await page.getByRole('button', { name: 'Новая запись', exact: true }).click();
+  await page.getByPlaceholder('Что случилось...').fill('Проверка дерева');
+  await page.getByRole('button', { name: 'Далее' }).click();
+  await page.getByPlaceholder('Какие мысли и эмоции появились...').fill('Дерево должно вырасти');
+  await page.getByRole('button', { name: 'Далее' }).click();
+  await page.getByRole('button', { name: 'Далее' }).click(); // шаг C
+  await page.getByRole('button', { name: 'Далее' }).click(); // шаг D
+  await page.getByRole('button', { name: 'Далее' }).click(); // шаг E
+  await page.getByRole('button', { name: 'Сохранить' }).click();
+  await expect(page.getByText('Проверка дерева')).toBeVisible({ timeout: 10000 });
+
+  // Открываем дерево заботы — счётчик практик вырос
+  await page.getByRole('button', { name: 'Ещё' }).click();
+  await page.getByRole('menuitem', { name: 'Дерево заботы' }).click();
+  await expect(page.getByText('Каждая практика помогает дереву расти')).toBeVisible();
+  await expect(page.getByText(/^1 практи/)).toBeVisible();
+});
+
+test('Оферта: доступна по ссылке с пейволла', async ({ page }) => {
+  // Пейволл содержит ссылку на оферту
+  await page.getByRole('button', { name: 'Ещё' }).click();
+  await page.getByRole('menuitem', { name: 'ЗаботаPsy+' }).click();
+  const ofertaLink = page.getByRole('link', { name: /оферты|оферта/i });
+  await expect(ofertaLink).toBeVisible();
+  await expect(ofertaLink).toHaveAttribute('href', '/oferta');
+
+  // Страница оферты открывается и содержит ключевые разделы
+  await page.goto('/oferta');
+  await expect(page.getByText('Публичная оферта на подписку «ЗаботаPsy+»')).toBeVisible();
+  await expect(page.getByText('Возврат денежных средств')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '4. Пробный период' })).toBeVisible();
 });
 
 test('Офлайн: приложение остаётся доступным после установки SW', async ({ page }) => {

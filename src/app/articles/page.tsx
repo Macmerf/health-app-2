@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { articles } from './data';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabota.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
 
 export const metadata: Metadata = {
-  title: 'Статьи о тревоге — Забота',
+    title: 'Статьи о тревоге — ЗаботаPsy',
   description:
     'Полезные статьи о тревоге, панических атаках и самоподдержке: что делать при приступе, как вести дневник мыслей, как работать со страхом по лестнице смелости.',
   alternates: { canonical: `${APP_URL}/articles` },
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ru_RU',
     url: `${APP_URL}/articles`,
-    siteName: 'Забота — поддержка при тревоге',
-    title: 'Статьи о тревоге — Забота',
+    siteName: 'ЗаботаPsy — поддержка при тревоге',
+  title: 'Статьи о тревоге — ЗаботаPsy',
     description:
       'Как справиться с панической атакой, вести дневник мыслей и работать со страхом по лестнице смелости.',
   },
@@ -57,7 +57,7 @@ export default function ArticlesPage() {
         </div>
 
         <div className="mt-10 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-2">Открой приложение «Забота»</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Открой приложение «ЗаботаPsy»</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             Практические инструменты: дневник мыслей, лестница смелости, план заботы,
             дыхание и заземление. Бесплатно и работает без интернета.
