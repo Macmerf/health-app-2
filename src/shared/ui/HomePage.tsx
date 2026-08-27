@@ -14,6 +14,7 @@ import {
   Wind,
   TreePine,
 } from 'lucide-react';
+import { AuthSuggestion } from '@/shared/ui/AuthSuggestion';
 
 const container: Variants = {
   animate: { transition: { staggerChildren: 0.08 } },
@@ -72,6 +73,11 @@ export function HomePage() {
         <p className='text-xs text-muted-foreground mt-2'>
           {texts.common.disclaimer}
         </p>
+      </motion.div>
+
+      {/* Предложение сохранить данные */}
+      <motion.div variants={item}>
+        <AuthSuggestion />
       </motion.div>
 
       {/* Journal */}
