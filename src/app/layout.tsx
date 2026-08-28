@@ -5,7 +5,7 @@ import { AuthProvider } from "@/shared/lib/auth-context";
 import { DataSyncProvider } from "@/shared/lib/data-sync-context";
 import { TanStackProvider } from "@/shared/lib/query-provider";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://zabotapsy.ru";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://zabotapsy.ru";
 
 const appJsonLd = {
   "@context": "https://schema.org",

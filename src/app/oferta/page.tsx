@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
-const PRICE_RUB = process.env.PRICE_RUB ?? '150';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://zabotapsy.ru';
+const PRICE_RUB = process.env.PRICE_RUB || '150';
 
 export const metadata: Metadata = {
   title: 'Оферта на подписку «ЗаботаPsy+» — ЗаботаPsy',

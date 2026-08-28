@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { articles } from './data';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://zabotapsy.ru';
 
 export const metadata: Metadata = {
     title: 'Статьи о тревоге — ЗаботаPsy',

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { articles } from './articles/data';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://zabotapsy.ru';
 
 /**
  * Sitemap «Заботы»: главная (SPA), все статьи и теги статей.

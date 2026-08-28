@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { articles, getArticle } from '../data';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://zabotapsy.ru';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://zabotapsy.ru';
 
 interface Props {
   params: Promise<{ slug: string }>;
