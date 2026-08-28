@@ -39,7 +39,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Standalone-режим нужен для Docker-деплоя на VPS (Timeweb).
+  // На Vercel он не нужен и ломает сборку (конфликт с трейсингом файлов
+  // Vercel — ошибка .next/next-server.js.nft.json), поэтому отключаем.
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
   reactStrictMode: true,
   async headers() {
     return [
