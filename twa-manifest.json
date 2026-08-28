@@ -1,0 +1,34 @@
+{
+  "packageId": "ru.zabotapsy.app",
+  "host": "https://zabotapsy.ru",
+  "name": "ЗаботаPsy",
+  "launcherName": "ЗаботаPsy",
+  "display": "standalone",
+  "themeColor": "#7C9A8E",
+  "navigationColor": "#FAF9F7",
+  "backgroundColor": "#FAF9F7",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "icons": [
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "signingKey": {
+    "path": "./android-release.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "minSdkVersion": 24,
+  "targetSdkVersion": 33
+}

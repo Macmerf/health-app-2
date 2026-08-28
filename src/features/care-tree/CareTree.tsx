@@ -23,8 +23,18 @@ function TreeSVG({ level, totalPractices }: { level: number; totalPractices: num
   const hasFlowers = level >= 4;
   const hasFruits = level >= 5;
 
+  // Динамический viewBox: крона растёт вверх и вширь, поэтому фиксированный
+  // viewBox обрезает её на высоких уровнях. Вычисляем границы по фактическому
+  // содержимому и добавляем небольшой отступ.
+  const pad = 12;
+  const vbTop = level === 0 ? 50 : crownY - crownR - pad;
+  const vbBottom = 200;
+  const vbLeft = level === 0 ? 40 : 100 - crownR * 1.25 - pad;
+  const vbRight = level === 0 ? 160 : 100 + crownR * 1.25 + pad;
+  const viewBox = `${vbLeft} ${vbTop} ${vbRight - vbLeft} ${vbBottom - vbTop}`;
+
   return (
-    <svg viewBox='0 0 200 200' className='w-full max-w-[240px] mx-auto'>
+    <svg viewBox={viewBox} className='w-full max-w-[240px] mx-auto'>
       {/* Земля */}
       <ellipse cx='100' cy='185' rx='60' ry='8' fill='var(--color-sand)' opacity='0.3' />
 

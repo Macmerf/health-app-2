@@ -1,0 +1,30 @@
+# ============================================================
+# «Забота» — compose для Timeweb Cloud Server (VPS).
+# Volume `app-data` сохраняет SQLite между передеплоями.
+# Caddy ставится отдельно на сервере (см. deploy/timeweb-caddy.md)
+# и терминирует HTTPS на домене, проксируя на :3000.
+# ============================================================
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Прод-домен, вшивается в бандл на этапе сборки (canonical/OG/sitemap)
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://zabotapsy.ru}
+    image: zabota:latest
+    container_name: zabota
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATA_DIR=/app/data
+      # Остальные env (JWT_SECRET, YooKassa, цены) — в .env на сервере,
+      # подключаются через env_file ниже. Не коммить .env в git!
+    env_file:
+      - .env
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:
