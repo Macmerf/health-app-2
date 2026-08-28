@@ -8,6 +8,8 @@ import { getOneData, setOneData, deleteData } from '@/server/data-store';
  * DELETE /api/data/:key — удалить значение
  */
 
+const MAX_VALUE_LENGTH = 200_000; // 200 KB — синхронизировано с /api/data/sync
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ key: string }> },
@@ -36,8 +38,25 @@ export async function PUT(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const contentLength = Number(req.headers.get('content-length') ?? '0');
+  if (contentLength > MAX_VALUE_LENGTH) {
+    return NextResponse.json({ error: 'Value too large' }, { status: 413 });
+  }
+
   const { key } = await params;
-  const value = await req.json();
+  let value: unknown;
+  try {
+    value = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  if (typeof value === 'string' && value.length > MAX_VALUE_LENGTH) {
+    return NextResponse.json({ error: 'Value too large' }, { status: 413 });
+  }
+  if (value !== null && typeof value === 'object' && JSON.stringify(value).length > MAX_VALUE_LENGTH) {
+    return NextResponse.json({ error: 'Value too large' }, { status: 413 });
+  }
 
   const version = setOneData(auth.user.id, decodeURIComponent(key), value);
 

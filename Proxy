@@ -1,7 +1,0 @@
-{
-  "type" : "error",
-  "id" : "01a03d88-6d70-7912-a8b2-754416bc3070",
-  "description" : "Authentication type is not allowed",
-  "parameter" : "Authorization",
-  "code" : "invalid_credentials"
-}

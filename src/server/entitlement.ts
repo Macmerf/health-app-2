@@ -13,9 +13,12 @@ import {
 
 export * from './entitlement-logic';
 
-/** Серверное состояние подписки для устройства. */
-export function getServerEntitlement(deviceId: string): ServerEntitlement {
-  const row = getSubscription(deviceId);
+/**
+ * Серверное состояние подписки для пользователя (по user_id из сессии).
+ * Подписки привязаны к аккаунтам — client-side deviceId больше не источник истины.
+ */
+export function getServerEntitlement(userId: string): ServerEntitlement {
+  const row = getSubscription(userId);
 
   if (!row || row.tier !== 'premium') {
     return rowToEntitlement(row);
@@ -32,7 +35,7 @@ export function getServerEntitlement(deviceId: string): ServerEntitlement {
   // Просрочено за грейс-период — автоматически возвращаем на free.
   if (isExpiredBeyondGrace(ent, now)) {
     upsertSubscription({
-      device_id: deviceId,
+      user_id: userId,
       tier: 'free',
       trial_started_at: row.trial_started_at,
       expires_at: null,
@@ -45,18 +48,18 @@ export function getServerEntitlement(deviceId: string): ServerEntitlement {
   return ent;
 }
 
-/** Старт триала: только один раз на устройство. */
-export function startTrialForDevice(deviceId: string): ServerEntitlement {
-  const existing = getSubscription(deviceId);
+/** Старт триала: только один раз на аккаунт. */
+export function startTrialForUser(userId: string): ServerEntitlement {
+  const existing = getSubscription(userId);
   if (existing?.trial_started_at) {
     // Триал уже был — вернуть текущее состояние, не давать второй.
-    return getServerEntitlement(deviceId);
+    return getServerEntitlement(userId);
   }
 
   const now = new Date().toISOString();
   const expiresAt = trialExpiry(Date.now());
   upsertSubscription({
-    device_id: deviceId,
+    user_id: userId,
     tier: 'premium',
     trial_started_at: now,
     expires_at: expiresAt,
@@ -71,9 +74,9 @@ export function startTrialForDevice(deviceId: string): ServerEntitlement {
  * Дни добавляются к текущему сроку, если подписка ещё активна (продление).
  * План «forever» устанавливает бессрочную подписку.
  */
-export function activateSubscription(deviceId: string, method: string, plan: SubscriptionPlan = 'month'): ServerEntitlement {
+export function activateSubscription(userId: string, method: string, plan: SubscriptionPlan = 'month'): ServerEntitlement {
   const now = new Date().toISOString();
-  const existing = getSubscription(deviceId);
+  const existing = getSubscription(userId);
 
   // Дата истечения: для активной подписки — продление, для «навсегда» — бессрочно.
   const expiresAt =
@@ -82,7 +85,7 @@ export function activateSubscription(deviceId: string, method: string, plan: Sub
       : subscriptionExpiry(Date.now(), plan, existing?.expires_at);
 
   upsertSubscription({
-    device_id: deviceId,
+    user_id: userId,
     tier: 'premium',
     trial_started_at: existing?.trial_started_at ?? null,
     expires_at: expiresAt,
@@ -98,21 +101,21 @@ export function activateSubscription(deviceId: string, method: string, plan: Sub
  * не продлевая срок повторно.
  */
 export function activateSubscriptionForPayment(
-  deviceId: string,
+  userId: string,
   method: string,
   paymentId: string,
   plan: SubscriptionPlan = 'month',
 ): ServerEntitlement {
-  const existing = getSubscription(deviceId);
+  const existing = getSubscription(userId);
 
   // Этот платёж уже был обработан — не продлеваем подписку повторно.
   if (existing?.last_payment_id === paymentId) {
-    return getServerEntitlement(deviceId);
+    return getServerEntitlement(userId);
   }
 
-  const entitlement = activateSubscription(deviceId, method, plan);
+  const entitlement = activateSubscription(userId, method, plan);
   upsertSubscription({
-    device_id: deviceId,
+    user_id: userId,
     tier: 'premium',
     trial_started_at: existing?.trial_started_at ?? null,
     expires_at: entitlement.expiresAt ?? null,

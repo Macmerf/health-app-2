@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { usePaymentStore } from '../store';
 import { useToast } from '@/shared/ui/ZToast';
-import { getDeviceId } from '@/shared/lib/device-id';
 import { texts } from '@/shared/constants/texts';
 import type { SubscriptionPlan } from '@/shared/schemas';
 
@@ -19,6 +18,7 @@ interface WidgetPaymentResult {
  *   и возвращает confirmationToken для инициализации виджета. Подписку активирует
  *   вебхук или проверка статуса (GET /api/payments/status) после события success.
  * - Без ключей (dev): сервер сразу активирует подписку, виджет не нужен.
+ * Платёж всегда создаётся для авторизованного пользователя (cookie-сессия).
  */
 export function usePayment() {
   const [processing, setProcessing] = useState(false);
@@ -29,15 +29,13 @@ export function usePayment() {
    * или null в dev-режиме (подписка уже активирована).
    */
   const createPayment = useCallback(async (plan: SubscriptionPlan): Promise<{ confirmationToken: string; paymentId: string | null } | null> => {
-    const deviceId = getDeviceId();
-    if (!deviceId) return null;
-
     setProcessing(true);
     try {
       const res = await fetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId, method: 'widget', plan }),
+        credentials: 'include',
+        body: JSON.stringify({ method: 'widget', plan }),
       });
 
       const data = (await res.json()) as WidgetPaymentResult;
@@ -73,13 +71,11 @@ export function usePayment() {
 
   /** Проверяет статус платежа и активирует подписку (после события success виджета). */
   const checkPaymentStatus = useCallback(async (paymentId: string | null): Promise<boolean> => {
-    const deviceId = getDeviceId();
-    if (!deviceId) return false;
+    if (!paymentId) return false;
 
     try {
-      const params = new URLSearchParams({ deviceId });
-      if (paymentId) params.set('paymentId', paymentId);
-      const res = await fetch(`/api/payments/status?${params}`, { cache: 'no-store' });
+      const params = new URLSearchParams({ paymentId });
+      const res = await fetch(`/api/payments/status?${params}`, { cache: 'no-store', credentials: 'include' });
       if (!res.ok) return false;
       const data = (await res.json()) as { status?: string; entitlement?: { tier?: string } };
       await usePaymentStore.getState().syncFromServer();

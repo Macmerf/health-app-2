@@ -12,6 +12,13 @@ export function yookassaConfigured(): boolean {
   return Boolean(process.env.YOOKASSA_SHOP_ID && process.env.YOOKASSA_SECRET_KEY);
 }
 
+/** Требуются ли ключи ЮKassa (в production — обязательно). */
+export function requireYookassaConfigured(): void {
+  if (process.env.NODE_ENV === 'production' && !yookassaConfigured()) {
+    throw new Error('YooKassa is not configured: set YOOKASSA_SHOP_ID and YOOKASSA_SECRET_KEY');
+  }
+}
+
 export interface CreatedPayment {
   id: string;
   status: string;
@@ -21,15 +28,21 @@ export interface CreatedPayment {
 }
 
 export interface CreatePaymentInput {
-  deviceId: string;
+  /** Идентификатор плательщика (user_id). Кладётся в metadata платежа —
+   *  вебхук и проверка статуса сверяют его с сессией. */
+  userId: string;
   method?: 'yookassa_card' | 'sbp' | 'manual_transfer' | 'widget';
   /** Тарифный план: месяц / год / навсегда. */
   plan?: SubscriptionPlan;
 }
 
-export async function createYookassaPayment({ deviceId, method, plan = 'month' }: CreatePaymentInput): Promise<CreatedPayment> {
+export async function createYookassaPayment({ userId, method, plan = 'month' }: CreatePaymentInput): Promise<CreatedPayment> {
   if (!yookassaConfigured()) {
-    // dev-режим: платёж «успешен» сразу, подписка активируется через entitlement API
+    // dev-режим: платёж «успешен» сразу, подписка активируется через entitlement API.
+    // В production ключи обязательны — dev-активация без оплаты недопустима.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('YooKassa is not configured: set YOOKASSA_SHOP_ID and YOOKASSA_SECRET_KEY');
+    }
     return { id: `dev-${Date.now()}`, status: 'succeeded', confirmationToken: null, dev: true };
   }
 
@@ -40,7 +53,7 @@ export async function createYookassaPayment({ deviceId, method, plan = 'month' }
     amount: { value: String(config.priceRub), currency: 'RUB' },
     capture: true,
     description: `ЗаботаPsy+ — подписка (${config.title}, ${methodName})`,
-    metadata: { deviceId, paymentMethod: method ?? 'widget', plan },
+    metadata: { userId, paymentMethod: method ?? 'widget', plan },
     confirmation: {
       // embedded — оплата через виджет на нашей странице (без редиректа на ЮKassa)
       type: 'embedded',
@@ -52,7 +65,7 @@ export async function createYookassaPayment({ deviceId, method, plan = 'month' }
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Basic ${Buffer.from(`${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`).toString('base64')}`,
-      'Idempotence-Key': `zabotapsy-${deviceId}-${Date.now()}`,
+      'Idempotence-Key': `zabotapsy-${userId}-${Date.now()}`,
     },
     body: JSON.stringify(body),
   });
@@ -109,13 +122,15 @@ export async function getPaymentInfo(paymentId: string): Promise<PaymentInfo> {
 
 /**
  * Проверка вебхука YooKassa.
- * Полноценная проверка подписи требует настройки вебхука с секретом в кабинете.
- * Здесь: если задан YOOKASSA_WEBHOOK_SECRET — сверяем заголовок X-YooKassa-Signature
+ * Если задан YOOKASSA_WEBHOOK_SECRET — сверяем заголовок X-YooKassa-Signature
  * (HMAC-SHA256 от raw body + secret, base64) — упрощённая, но практичная схема.
- * Если секрет не задан — dev-режим: принимаем все события.
+ * Fail-closed в production: без секрета вебхуки отклоняются, иначе кто угодно
+ * мог бы POST'ом активировать подписку. Dev-режим (без секрета) — только локально.
  */
 export function verifyWebhook(rawBody: string, signature: string | null): boolean {
-  if (!process.env.YOOKASSA_WEBHOOK_SECRET) return true; // dev-режим
+  if (!process.env.YOOKASSA_WEBHOOK_SECRET) {
+    return process.env.NODE_ENV !== 'production'; // dev-режим только вне прода
+  }
   if (!signature) return false;
   try {
     const hmac = createHmacSha256(rawBody, process.env.YOOKASSA_WEBHOOK_SECRET);

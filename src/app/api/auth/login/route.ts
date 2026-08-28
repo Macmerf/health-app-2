@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { loginUser } from '@/server/auth';
 import { rateLimit, getRateLimitHeaders } from '@/server/rate-limiter';
+
+const credentialsSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(1).max(1024),
+});
 
 function getClientIp(req: NextRequest): string {
   const fwd = req.headers.get('x-forwarded-for');
@@ -18,11 +24,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    const parsed = credentialsSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
+    const { email, password } = parsed.data;
 
     const { user, token } = loginUser(email, password);
 

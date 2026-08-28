@@ -8,6 +8,12 @@ import { test, expect } from '@playwright/test';
  */
 
 test('Виджет ЮKassa: платёж создаётся и форма рендерится', async ({ page }) => {
+  // Платёж создаётся для авторизованного пользователя: регистрируем тестовый аккаунт
+  // (cookie сессии сохранится в контексте браузера и уйдёт в POST /api/payments).
+  await page.request.post('/api/auth/register', {
+    data: { email: 'e2e-widget@example.com', password: 'e2e-test-password-123' },
+  });
+
   // Сервер отвечает free + trialUsed — пейволл покажет кнопку «Оплатить».
   // Формат: плоский объект без обёртки (см. /api/entitlement).
   await page.route('**/api/entitlement**', (route) =>
@@ -21,7 +27,6 @@ test('Виджет ЮKassa: платёж создаётся и форма рен
       }),
     }),
   );
-
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   // Пропускаем онбординг, если показался

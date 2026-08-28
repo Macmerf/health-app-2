@@ -20,7 +20,13 @@ export async function POST(req: NextRequest) {
   }
 
   const response = NextResponse.json({ message: 'Logged out' }, { status: 200 });
-  response.cookies.set('session', '', { maxAge: 0, path: '/' });
+  response.cookies.set('session', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  });
 
   return response;
 }

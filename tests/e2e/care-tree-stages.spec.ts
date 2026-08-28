@@ -76,6 +76,20 @@ test.beforeEach(async ({ page }) => {
   }
   await persistOnboardingCompleted(page);
 
+  // Триал теперь выдаётся только авторизованным: мокаем API так, чтобы
+  // POST /api/payments/trial выдал premium (иначе UI не покажет кнопку триала).
+  await page.route('**/api/payments/trial', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        tier: 'premium',
+        expiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+        trialStartedAt: new Date().toISOString(),
+        trialUsed: true,
+      }),
+    }),
+  );
+
   // Активируем триал → premium-entitlement устанавливается синхронно в store
   await page.getByRole('button', { name: 'Ещё' }).click();
   await page.getByRole('menuitem', { name: 'ЗаботаPsy+' }).click();

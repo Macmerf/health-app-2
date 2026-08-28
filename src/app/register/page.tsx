@@ -23,7 +23,7 @@ export default function RegisterPage() {
     if (password !== confirm) {
       return; // Ошибка уже будет показана
     }
-    if (password.length < 6) {
+    if (password.length < 8) {
       return;
     }
 
@@ -70,12 +70,12 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Минимум 6 символов"
+                placeholder="Минимум 8 символов"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                minLength={6}
+                minLength={8}
               />
             </div>
 
@@ -89,7 +89,7 @@ export default function RegisterPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 required
                 autoComplete="new-password"
-                minLength={6}
+                minLength={8}
               />
             </div>
 
@@ -99,7 +99,7 @@ export default function RegisterPage() {
               </Alert>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading || password !== confirm || password.length < 6}>
+            <Button type="submit" className="w-full" disabled={loading || password !== confirm || password.length < 8}>
               {loading ? 'Создаём аккаунт...' : 'Зарегистрироваться'}
             </Button>
 

@@ -3,7 +3,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createPersistConfig } from '@/shared/lib/storage';
-import { getDeviceId } from '@/shared/lib/device-id';
 import type { UserEntitlement } from '@/shared/schemas';
 
 const FREE_FEATURES = new Set([
@@ -23,9 +22,9 @@ interface PaymentStore {
   isPremium: () => boolean;
   /** Побочный эффект: понижает тариф до free, если подписка истекла и льготный период прошёл. */
   refreshEntitlement: () => void;
-  /** Синхронизация подписки с сервером (источник истины). */
+  /** Синхронизация подписки с сервером (источник истины). Требует авторизацию. */
   syncFromServer: () => Promise<void>;
-  /** Старт триала через сервер (только один раз на устройство). */
+  /** Старт триала через сервер (только один раз на аккаунт). Требует авторизацию. */
   startTrialServer: () => Promise<boolean>;
 }
 
@@ -96,11 +95,12 @@ export const usePaymentStore = create<PaymentStore>()(
       },
 
       syncFromServer: async () => {
-        const deviceId = getDeviceId();
-        if (!deviceId) return;
         try {
-          const res = await fetch(`/api/entitlement?deviceId=${encodeURIComponent(deviceId)}`, { cache: 'no-store' });
-          if (!res.ok) return;
+          const res = await fetch('/api/entitlement', {
+            cache: 'no-store',
+            credentials: 'include',
+          });
+          if (!res.ok) return; // не авторизован — остаёмся на локальном кэше (free)
           const data = (await res.json()) as ServerEntitlementPayload;
           set({ entitlement: fromServer(data) });
         } catch {
@@ -109,13 +109,10 @@ export const usePaymentStore = create<PaymentStore>()(
       },
 
       startTrialServer: async () => {
-        const deviceId = getDeviceId();
-        if (!deviceId) return false;
         try {
           const res = await fetch('/api/payments/trial', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ deviceId }),
+            credentials: 'include',
           });
           if (!res.ok) return false;
           const data = (await res.json()) as ServerEntitlementPayload;

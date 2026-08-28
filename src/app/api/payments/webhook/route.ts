@@ -6,7 +6,8 @@ export const runtime = 'nodejs';
 
 /**
  * Вебхук YooKassa: приходит после успешной оплаты.
- * В dev-режиме (без YOOKASSA_WEBHOOK_SECRET) принимаем события без проверки подписи.
+ * В production требует YOOKASSA_WEBHOOK_SECRET (fail-closed, см. verifyWebhook):
+ * без него подписку мог бы активировать кто угодно POST-запросом.
  */
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
 
   let payload: {
     event?: string;
-    object?: { id?: string; metadata?: { deviceId?: string; paymentMethod?: string; plan?: string } };
+    object?: { id?: string; metadata?: { userId?: string; paymentMethod?: string; plan?: string } };
   };
   try {
     payload = JSON.parse(rawBody);
@@ -26,17 +27,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const deviceId = payload.object?.metadata?.deviceId;
+  const userId = payload.object?.metadata?.userId;
   const paymentId = payload.object?.id;
   const method = payload.object?.metadata?.paymentMethod ?? 'widget';
   const plan = planFromMetadata(payload.object?.metadata?.plan);
 
-  if (!deviceId || payload.event !== 'payment.succeeded') {
+  if (!userId || payload.event !== 'payment.succeeded') {
     // Событие не связано с подпиской — отвечаем 200, чтобы не было ретраев.
     return NextResponse.json({ ok: true });
   }
 
   // Идемпотентно: повторный вебхук по тому же платежу не продлит подписку.
-  const entitlement: ServerEntitlement = activateSubscriptionForPayment(deviceId, method, paymentId ?? 'webhook', plan);
+  const entitlement: ServerEntitlement = activateSubscriptionForPayment(userId, method, paymentId ?? 'webhook', plan);
   return NextResponse.json({ ok: true, entitlement });
 }

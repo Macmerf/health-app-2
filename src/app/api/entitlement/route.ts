@@ -1,16 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/server/auth-middleware';
 import { getServerEntitlement, type ServerEntitlement } from '@/server/entitlement';
 
 export const runtime = 'nodejs';
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const deviceId = url.searchParams.get('deviceId');
-
-  if (!deviceId) {
-    return NextResponse.json({ error: 'deviceId is required' }, { status: 400 });
+/**
+ * GET /api/entitlement — состояние подписки текущего пользователя.
+ * Идентификатор берётся из сессии, а не из query — чужую подписку получить нельзя.
+ */
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const entitlement: ServerEntitlement = getServerEntitlement(deviceId);
+  const entitlement: ServerEntitlement = getServerEntitlement(auth.user.id);
   return NextResponse.json(entitlement);
 }

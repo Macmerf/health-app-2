@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/server/auth-middleware';
 import { getPaymentInfo, yookassaConfigured } from '@/server/yookassa';
 import { activateSubscriptionForPayment, getServerEntitlement, planFromMetadata, type ServerEntitlement } from '@/server/entitlement';
 
@@ -10,35 +11,41 @@ export const runtime = 'nodejs';
  * клиент после события success виджета опрашивает этот эндпоинт,
  * и подписка активируется сразу, не дожидаясь вебхука.
  * Двойная активация исключена через last_payment_id.
+ * Требует авторизацию: deviceId из query больше не принимается.
  */
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const paymentId = url.searchParams.get('paymentId');
-  const deviceId = url.searchParams.get('deviceId');
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  if (!paymentId || !deviceId) {
-    return NextResponse.json({ error: 'paymentId and deviceId are required' }, { status: 400 });
+  const url = new URL(req.url);
+  const paymentId = url.searchParams.get('paymentId');
+
+  if (!paymentId) {
+    return NextResponse.json({ error: 'paymentId is required' }, { status: 400 });
   }
 
   if (!yookassaConfigured()) {
     // dev-режим: статус не проверить, возвращаем текущее состояние подписки.
-    const entitlement: ServerEntitlement = getServerEntitlement(deviceId);
+    const entitlement: ServerEntitlement = getServerEntitlement(auth.user.id);
     return NextResponse.json({ status: 'dev', entitlement });
   }
 
   try {
     const payment = await getPaymentInfo(paymentId);
 
-    // Метаданные платежа должны совпадать с deviceId — чужой платёж не активирует подписку.
-    const paymentDeviceId = payment.metadata?.deviceId;
-    if (paymentDeviceId && paymentDeviceId !== deviceId) {
-      return NextResponse.json({ error: 'Payment does not belong to this device' }, { status: 403 });
+    // Метаданные платежа обязаны ссылаться на текущего пользователя —
+    // чужой платёж не активирует подписку.
+    const paymentUserId = payment.metadata?.userId;
+    if (paymentUserId !== auth.user.id) {
+      return NextResponse.json({ error: 'Payment does not belong to this user' }, { status: 403 });
     }
 
-    let entitlement: ServerEntitlement = getServerEntitlement(deviceId);
+    let entitlement: ServerEntitlement = getServerEntitlement(auth.user.id);
     if (payment.status === 'succeeded' && payment.paid) {
       entitlement = activateSubscriptionForPayment(
-        deviceId,
+        auth.user.id,
         payment.metadata?.paymentMethod ?? 'widget',
         paymentId,
         planFromMetadata(payment.metadata?.plan),

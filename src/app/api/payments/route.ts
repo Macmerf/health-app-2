@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
-import { createYookassaPayment, yookassaConfigured } from '@/server/yookassa';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/server/auth-middleware';
+import { createYookassaPayment, requireYookassaConfigured, yookassaConfigured } from '@/server/yookassa';
 import { activateSubscription, isSubscriptionPlan, plansForClient, type ServerEntitlement } from '@/server/entitlement';
 
 export const runtime = 'nodejs';
 
 interface CreatePaymentBody {
-  deviceId?: string;
   method?: 'yookassa_card' | 'sbp' | 'manual_transfer' | 'widget';
   plan?: string;
 }
@@ -15,28 +15,36 @@ export async function GET() {
   return NextResponse.json({ plans: plansForClient() });
 }
 
-export async function POST(request: Request) {
+/**
+ * POST — создать платёж для текущего пользователя.
+ * deviceId не принимаем: пользователь определяется сессией.
+ * В dev-режиме (без ключей YooKassa) подписка активируется сразу — только локально.
+ */
+export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (!auth) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let body: CreatePaymentBody;
   try {
-    body = await request.json();
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const deviceId = body.deviceId;
   const method = body.method ?? 'widget';
   const plan = body.plan && isSubscriptionPlan(body.plan) ? body.plan : 'month';
-  if (!deviceId) {
-    return NextResponse.json({ error: 'deviceId is required' }, { status: 400 });
-  }
+  const userId = auth.user.id;
 
   try {
-    const payment = await createYookassaPayment({ deviceId, method, plan });
+    requireYookassaConfigured();
+    const payment = await createYookassaPayment({ userId, method, plan });
 
     // dev-режим: подписка активируется сразу (для локального теста флоу).
     // В проде подписку активирует вебхук или проверка статуса после оплаты виджетом.
     if (payment.dev) {
-      const entitlement: ServerEntitlement = activateSubscription(deviceId, method, plan);
+      const entitlement: ServerEntitlement = activateSubscription(userId, method, plan);
       return NextResponse.json({ payment, entitlement });
     }
 

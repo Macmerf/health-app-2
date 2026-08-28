@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { randomBytes, scryptSync, timingSafeEqual, createHmac } from 'node:crypto';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 /**
  * Авторизация: пользователи, сессии (JWT), хеши паролей.
@@ -96,30 +96,10 @@ function verifyPassword(password: string, storedHash: string, salt: string): boo
   );
 }
 
-/** Генерация JWT-токена (простой self-signed). */
-function signToken(payload: Record<string, unknown>, secret: string): string {
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const part1 = btoa(JSON.stringify(header));
-  const part2 = btoa(JSON.stringify(payload));
-  const signature = createSignature(`${part1}.${part2}`, secret);
-  return `${part1}.${part2}.${signature}`;
-}
-
-function createSignature(data: string, secret: string): string {
-  return createHmac('sha256', secret)
-    .update(data)
-    .digest('base64url');
-}
-
-/** Получить секрет JWT из env. */
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error(
-      'JWT_SECRET must be set and at least 32 chars long. Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
-    );
-  }
-  return secret;
+/** Dummy-scrypt: выравнивает время ответа при несуществующем email. */
+const DUMMY_SALT = '00000000000000000000000000000000';
+function dummyVerify(): void {
+  scryptSync('dummy-password', DUMMY_SALT, KEY_BYTES);
 }
 
 // --- Публичные API ---
@@ -168,12 +148,18 @@ export function loginUser(email: string, password: string): AuthSession {
   ).get(email.toLowerCase()) as UserRow | undefined;
 
   if (!row) {
+    // Фейковая проверка пароля — выравнивает время ответа с существующим email
+    // (иначе перечисление email по таймингу ответа).
+    dummyVerify();
     throw new Error('Invalid email or password');
   }
 
   if (!verifyPassword(password, row.password_hash, row.salt)) {
     throw new Error('Invalid email or password');
   }
+
+  // Чистим истёкшие сессии (в т.ч. этого пользователя)
+  db.prepare('DELETE FROM sessions WHERE expires_at <= ?').run(new Date().toISOString());
 
   const token = createSession(row.id);
 
@@ -190,6 +176,8 @@ export function loginUser(email: string, password: string): AuthSession {
 
 /**
  * Проверка сессии по токену.
+ * Токен — случайная строка в БД; подпись JWT не проверяется сознательно:
+ * source of truth — таблица sessions (мгновенный revocation).
  */
 export function getSession(token: string): AuthSession | null {
   const db = getAuthDb();
@@ -242,19 +230,6 @@ export function getUserById(id: string): User | null {
   return row ?? null;
 }
 
-/**
- * Обновление токена (продление сессии).
- */
-export function refreshSession(oldToken: string): AuthSession | null {
-  const session = getSession(oldToken);
-  if (!session) return null;
-
-  // Удаляем старую сессию, создаём новую
-  logoutUser(oldToken);
-  const newToken = createSession(session.user.id);
-  return { ...session, token: newToken };
-}
-
 // --- Внутренние ---
 
 function createSession(userId: string): string {
@@ -262,10 +237,9 @@ function createSession(userId: string): string {
   const now = new Date().toISOString();
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
 
-  // Генерируем JWT: именно он хранится в БД и выдаётся клиенту,
-  // чтобы getSession/logout находили сессию по переданному токену.
-  const jwtPayload = { sub: userId, iat: Date.now() / 1000, exp: Date.now() / 1000 + SESSION_TTL_MS / 1000 };
-  const token = signToken(jwtPayload, getJwtSecret());
+  // Токен — 256 бит криптостойкой случайности. JWT не нужен: source of truth —
+  // таблица sessions (мгновенный revocation, проверка только по БД).
+  const token = randomBytes(32).toString('base64url');
 
   db.prepare(
     'INSERT INTO sessions (token, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)',
