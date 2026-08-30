@@ -31,12 +31,11 @@ export interface CreatePaymentInput {
   /** Идентификатор плательщика (user_id). Кладётся в metadata платежа —
    *  вебхук и проверка статуса сверяют его с сессией. */
   userId: string;
-  method?: 'yookassa_card' | 'sbp' | 'manual_transfer' | 'widget';
   /** Тарифный план: месяц / год / навсегда. */
   plan?: SubscriptionPlan;
 }
 
-export async function createYookassaPayment({ userId, method, plan = 'month' }: CreatePaymentInput): Promise<CreatedPayment> {
+export async function createYookassaPayment({ userId, plan = 'month' }: CreatePaymentInput): Promise<CreatedPayment> {
   if (!yookassaConfigured()) {
     // dev-режим: платёж «успешен» сразу, подписка активируется через entitlement API.
     // В production ключи обязательны — dev-активация без оплаты недопустима.
@@ -47,13 +46,12 @@ export async function createYookassaPayment({ userId, method, plan = 'month' }: 
   }
 
   const config = PLANS[plan];
-  const methodName = method === 'sbp' ? 'СБП' : method === 'manual_transfer' ? 'Перевод по реквизитам' : 'Виджет ЮKassa';
 
   const body = {
     amount: { value: String(config.priceRub), currency: 'RUB' },
     capture: true,
-    description: `ЗаботаPsy+ — подписка (${config.title}, ${methodName})`,
-    metadata: { userId, paymentMethod: method ?? 'widget', plan },
+    description: `ЗаботаPsy+ — подписка (${config.title})`,
+    metadata: { userId, paymentMethod: 'widget', plan },
     confirmation: {
       // embedded — оплата через виджет на нашей странице (без редиректа на ЮKassa)
       type: 'embedded',

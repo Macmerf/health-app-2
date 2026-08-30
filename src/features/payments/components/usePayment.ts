@@ -35,7 +35,7 @@ export function usePayment() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ method: 'widget', plan }),
+        body: JSON.stringify({ plan }),
       });
 
       const data = (await res.json()) as WidgetPaymentResult;

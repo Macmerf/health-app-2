@@ -171,7 +171,6 @@ export const texts = {
     trialNote: 'Далее — от {price}/мес. Отмена в любой момент.',
     extendNow: 'Продлить сейчас —',
     foreverActive: 'Доступ навсегда активен',
-    sbp: 'СБП (Система быстрых платежей)',
     trialPrice: 'Бесплатно 7 дней',
     subscribed: 'Подписка активна',
     expired: 'Подписка истекла',

@@ -6,7 +6,6 @@ import { activateSubscription, isSubscriptionPlan, plansForClient, type ServerEn
 export const runtime = 'nodejs';
 
 interface CreatePaymentBody {
-  method?: 'yookassa_card' | 'sbp' | 'manual_transfer' | 'widget';
   plan?: string;
 }
 
@@ -33,18 +32,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const method = body.method ?? 'widget';
   const plan = body.plan && isSubscriptionPlan(body.plan) ? body.plan : 'month';
   const userId = auth.user.id;
 
   try {
     requireYookassaConfigured();
-    const payment = await createYookassaPayment({ userId, method, plan });
+    const payment = await createYookassaPayment({ userId, plan });
 
     // dev-режим: подписка активируется сразу (для локального теста флоу).
     // В проде подписку активирует вебхук или проверка статуса после оплаты виджетом.
     if (payment.dev) {
-      const entitlement: ServerEntitlement = activateSubscription(userId, method, plan);
+      const entitlement: ServerEntitlement = activateSubscription(userId, 'widget', plan);
       return NextResponse.json({ payment, entitlement });
     }
 

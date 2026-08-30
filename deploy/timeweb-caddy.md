@@ -178,7 +178,6 @@ YOOKASSA_SECRET_KEY=...       # живой_секрет_ключ (если ес�
 YOOKASSA_WEBHOOK_SECRET=...   # пока можно оставить пустым
 APP_BASE_URL=https://zabotapsy.ru
 NEXT_PUBLIC_APP_URL=https://zabotapsy.ru
-MANUAL_TRANSFER_DETAILS=Твои реквизиты для перевода
 ```
 
 **Важно:** файл `.env` в git не коммитится — он живёт только на сервере.
