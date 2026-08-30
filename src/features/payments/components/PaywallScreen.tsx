@@ -8,6 +8,7 @@ import { ZButton } from '@/shared/ui/ZButton';
 import { ZBadge } from '@/shared/ui/ZBadge';
 import { usePaymentStore } from '../store';
 import { usePayment } from './usePayment';
+import { usePlans } from '../usePlans';
 import { YookassaWidget } from './YookassaWidget';
 import { useRouterStore } from '@/shared/lib/stores';
 import { texts } from '@/shared/constants/texts';
@@ -37,6 +38,7 @@ export function PaywallScreen() {
   // Состояние виджета: токен создаётся при клике «Оплатить».
   const [widget, setWidget] = useState<{ confirmationToken: string; paymentId: string | null } | null>(null);
   const { createPayment, processing } = usePayment();
+  const plans = usePlans();
   const back = useRouterStore((s) => s.back);
 
   // Подписка на результат, а не на ссылку функции — для мгновенного обновления статуса.
@@ -154,7 +156,7 @@ export function PaywallScreen() {
         {/* Тарифы */}
         {!isForever && (
           <motion.div variants={item} className="space-y-2">
-            {texts.paywall.plans.map((plan) => {
+            {plans.map((plan) => {
               const active = selectedPlan === plan.id;
               return (
                 <button
@@ -200,7 +202,7 @@ export function PaywallScreen() {
                 {texts.paywall.startTrial}
               </ZButton>
               <p className="text-center text-xs text-muted-foreground">
-                {texts.paywall.trialNote}
+                {texts.paywall.trialNote.replace('{price}', plans[0].price)}
               </p>
             </>
           )}
@@ -214,7 +216,7 @@ export function PaywallScreen() {
                 onClick={() => handlePay(selectedPlan)}
                 loading={processing}
               >
-                {texts.paywall.payNow} {texts.paywall.plans.find((p) => p.id === selectedPlan)?.price}
+                {texts.paywall.payNow} {plans.find((p) => p.id === selectedPlan)?.price}
               </ZButton>
               <ZButton
                 variant="ghost"
@@ -238,7 +240,7 @@ export function PaywallScreen() {
                 onClick={() => handlePay(selectedPlan)}
                 loading={processing}
               >
-                {texts.paywall.extendNow} {texts.paywall.plans.find((p) => p.id === selectedPlan)?.price}
+                {texts.paywall.extendNow} {plans.find((p) => p.id === selectedPlan)?.price}
               </ZButton>
               <ZButton
                 variant="secondary"

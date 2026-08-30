@@ -22,3 +22,32 @@ Stage Summary:
 - Все фичи работают: дневник, лестница, план заботы, дыхание, заземление, ачивки, настройки, подписка
 - Базовый функционал бесплатен и доступен всегда
 - Дизайн-система соблюдена (цвета, шрифт Onest, радиусы, тени, анимации)
+
+---
+Task ID: deploy-docs
+Agent: Koda
+Task: Инструкция по деплою на Timeweb + автодеплой из GitHub
+
+Work Log:
+- Создана пошаговая инструкция deploy/timeweb-caddy.md (покупка VPS/домена, DNS, Docker, Caddy, .env, запуск, YooKassa-вебхук, обновления, troubleshooting)
+- Добавлен .github/workflows/deploy.yml — автодеплой по SSH при push в main (секреты SSH_HOST/SSH_USER/SSH_PRIVATE_KEY)
+
+Stage Summary:
+- Проект готов к деплою на Timeweb Cloud Server (VPS) по инструкции deploy/timeweb-caddy.md
+
+---
+Task ID: env-prices-cleanup
+Agent: Koda
+Task: Устранение дублей и хардкода цен (env + клиент)
+
+Work Log:
+- .env.example: убран дубль PRICE_RUB (был объявлен дважды), добавлены отсутствующие PRICE_YEAR_RUB и PRICE_FOREVER_RUB
+- src/shared/constants/plans.ts: удалён мёртвый дубликат PLANS с захардкоженными ценами (осталась только FOREVER_EXPIRES_AT)
+- src/features/payments/usePlans.ts: новый хук — цены загружаются с сервера (GET /api/payments, из env), офлайн-фолбэк в одном месте; заметка «Выгоднее — X ₽/мес» считается из цены года
+- PaywallScreen: тарифы и цены из usePlans; trialNote стал шаблоном «от {price}/мес»
+- PremiumUpsell: бейдж цены месяца из usePlans вместо хардкода «150 ₽/мес»
+- texts.ts: убраны захардкоженные цены (plans, price), trialNote — шаблон
+- Проверка: tsc --noEmit ✓, npm test (27 pass) ✓, npm run build ✓; ошибки линтера в auth-context.tsx — преждесуществующие, не связаны с правками
+
+Stage Summary:
+- Источник цен — env на сервере; смена цены в .env сразу видна в UI без правок кода

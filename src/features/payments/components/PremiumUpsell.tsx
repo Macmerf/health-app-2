@@ -8,6 +8,7 @@ import { ZButton } from '@/shared/ui/ZButton';
 import { ZBadge } from '@/shared/ui/ZBadge';
 import { useRouterStore } from '@/shared/lib/stores';
 import { texts } from '@/shared/constants/texts';
+import { usePlans } from '../usePlans';
 
 interface PremiumUpsellProps {
   variant?: 'card' | 'banner';
@@ -21,6 +22,8 @@ const HIGHLIGHT_FEATURES = [
 
 export function PremiumUpsell({ variant = 'card' }: PremiumUpsellProps) {
   const navigate = useRouterStore((s) => s.navigate);
+  const plans = usePlans();
+  const monthPrice = `${plans[0].price}/мес`;
 
   if (variant === 'banner') {
     return (
@@ -39,7 +42,7 @@ export function PremiumUpsell({ variant = 'card' }: PremiumUpsellProps) {
                 <p className="text-sm font-semibold text-foreground truncate">
                   {texts.common.premium}
                 </p>
-                <ZBadge variant="primary">{texts.paywall.price}</ZBadge>
+                <ZBadge variant="primary">{monthPrice}</ZBadge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                 {texts.paywall.valueProp}

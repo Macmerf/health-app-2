@@ -149,14 +149,12 @@ export default function OfertaPage() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">11. Реквизиты</h2>
             <div className="rounded-2xl border border-border bg-card p-4 flex flex-col gap-2 text-sm text-foreground/90">
-              <p>Исполнитель: самозанятый (ФИО) — заполнить при регистрации в YooKassa</p>
-              <p>Электронная почта для обращений и возвратов: — заполнить</p>
+              <p>Исполнитель: самозанятый Нуриахметов Дамир Тагирович</p>
+              <p>ИНН самозанятого: 164706775287</p>
+              <p>Электронная почта для обращений и возвратов: dnuriahmetoff@yandex.ru</p>
               <p>Адрес Приложения: {APP_URL}</p>
               <p>Способы оплаты: банковская карта (YooKassa), СБП, перевод по реквизитам</p>
             </div>
-            <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
-              Перед публикацией замените плейсхолдеры в разделе «Реквизиты» на реальные данные.
-            </p>
           </section>
         </div>
       </div>

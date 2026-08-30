@@ -1,0 +1,26 @@
+name: Deploy
+
+# Автодеплой на VPS Timeweb при пуше в main.
+# Требуемые секреты репозитория (Settings → Secrets and variables → Actions):
+#   SSH_HOST         — IP сервера
+#   SSH_USER         — пользователь SSH (root)
+#   SSH_PRIVATE_KEY  — приватный SSH-ключ (deploy_key)
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/zabota
+            git pull
+            docker compose up -d --build
+            docker image prune -f
