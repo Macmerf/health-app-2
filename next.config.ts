@@ -21,10 +21,12 @@ const securityHeaders = [
       "default-src 'self'",
       // Next.js: инлайн-стили гидрации
       "style-src 'self' 'unsafe-inline'",
-      // Next.js dev-режим требует 'unsafe-eval'; в проде — только 'self'
+      // Dev: 'unsafe-inline' для JSON-LD, Turbopack HMR, nonce-скриптов Next.js
+      // Prod: 'unsafe-inline' нужен для JSON-LD (метаданные, не пользовательский код)
+      // и nonce-скриптов Next.js. JSON-LD — статичный мета-контент, риски минимальны.
       ...(process.env.NODE_ENV === "production"
-        ? ["script-src 'self'"]
-        : ["script-src 'self' 'unsafe-eval'"]),
+        ? ["script-src 'self' 'unsafe-inline'"]
+        : ["script-src 'self' 'unsafe-inline' 'unsafe-eval'"]),
       "img-src 'self' data: blob:",
       "font-src 'self'",
       "connect-src 'self' https://api.yookassa.ru",

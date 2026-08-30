@@ -206,9 +206,17 @@ curl http://127.0.0.1:3000
 
 ## Шаг 8. Настраиваем Caddy (HTTPS + домен)
 
-```bash
-nano /etc/caddy/Caddyfile
-```
+1. Создаём директорию конфигурации (если нет):
+
+   ```bash
+   mkdir -p /etc/caddy
+   ```
+
+2. Открываем конфиг:
+
+   ```bash
+   nano /etc/caddy/Caddyfile
+   ```
 
 Сотри всё (в nano: держи `Ctrl+K`) и вставь:
 
