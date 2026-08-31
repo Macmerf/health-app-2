@@ -1,5 +1,10 @@
-const CACHE_NAME = 'zabotapsy-v1';
+const CACHE_NAME = 'zabotapsy-v0.2.1';
 
+/**
+ * Версия SW меняется при каждом деплое (см. scripts/sync-sw-version.mjs —
+ * подставляет номер сборки из package.json). Иное имя кэша = авто-очистка
+ * старого кэша в activate.
+ */
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -9,8 +14,12 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    // ВАЖНО: не вызываем self.skipWaiting() здесь.
+    // Новый SW становится "waiting" и активируется только после подтверждения
+    // от клиента (кнопка «Обновить» в баннере) — чтобы не обрывать сессию
+    // пользователя посреди записи в дневник. При самой первой установке
+    // (когда нет предыдущего SW) активация происходит сразу.
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -22,6 +31,13 @@ self.addEventListener('activate', (event) => {
     )
   );
   self.clients.claim();
+});
+
+// Команда от клиента: активировать ожидающий SW и перезагрузить страницу.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

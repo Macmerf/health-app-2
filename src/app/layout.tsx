@@ -4,6 +4,7 @@ import { AppShell } from "@/shared/ui/app-shell";
 import { AuthProvider } from "@/shared/lib/auth-context";
 import { DataSyncProvider } from "@/shared/lib/data-sync-context";
 import { TanStackProvider } from "@/shared/lib/query-provider";
+import { PwaUpdateBanner } from "@/shared/ui/PwaUpdateBanner";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://zabotapsy.ru";
 
@@ -95,7 +96,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <TanStackProvider>
           <AuthProvider>
             <DataSyncProvider>
-              <AppShell>{children}</AppShell>
+              <AppShell>
+                {children}
+                <PwaUpdateBanner />
+              </AppShell>
             </DataSyncProvider>
           </AuthProvider>
         </TanStackProvider>

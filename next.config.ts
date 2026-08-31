@@ -52,6 +52,18 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        // Service worker не должен кэшироваться: иначе после деплоя браузер
+        // может до 24 часов держать старый SW и не предлагать обновление.
+        // Остальную статику не трогаем: /_next/static хеширован и immutable.
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
