@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZBadge } from '@/shared/ui/ZBadge';
+import { ZExpandableText } from '@/shared/ui/ZExpandableText';
 import { FeatureGate } from '@/features/payments';
 import { AchievementIcon } from './AchievementIcon';
 import { useGamificationStore } from '../store';
@@ -51,9 +52,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
 
         {isUnlocked ? (
           <>
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {achievement.description}
-            </p>
+            <ZExpandableText text={achievement.description} lines={2} textClassName="text-xs text-muted-foreground" />
             <ZBadge variant="primary">
               {formatDate(achievement.unlockedAt)}
             </ZBadge>

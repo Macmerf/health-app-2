@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 import { ZButton } from '@/shared/ui/ZButton';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZBadge } from '@/shared/ui/ZBadge';
+import { ZExpandableText } from '@/shared/ui/ZExpandableText';
 import { useToast } from '@/shared/ui/ZToast';
 import { texts } from '@/shared/constants/texts';
 import { useJournalStore } from '../store';
@@ -46,11 +47,6 @@ function formatDate(iso: string): string {
   });
 }
 
-function truncate(str: string, maxLen: number): string {
-  if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen) + '...';
-}
-
 const itemVariants = {
   hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
@@ -81,9 +77,9 @@ export function JournalHistory() {
   const sorted = [...entries].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col">
       <FeatureGuide {...JOURNAL_GUIDE} />
-      <div className="flex-1 px-4 py-4 max-w-lg mx-auto w-full">
+      <div className="flex-1 py-1">
         {sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
             <span className="text-4xl" aria-hidden="true">📓</span>
@@ -110,10 +106,10 @@ export function JournalHistory() {
                       <button onClick={() => toggleExpand(entry.id)} className="flex flex-col gap-1.5 w-full text-left">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs text-muted-foreground">{formatDate(entry.createdAt)}</span>
-                          {entry.emotionName && <ZBadge variant="primary">{truncate(entry.emotionName, 20)}</ZBadge>}
-                          {entry.patternName && <ZBadge variant="secondary">{truncate(entry.patternName, 20)}</ZBadge>}
+                          {entry.emotionName && <ZBadge variant="primary">{entry.emotionName}</ZBadge>}
+                          {entry.patternName && <ZBadge variant="secondary">{entry.patternName}</ZBadge>}
                         </div>
-                        <p className="text-sm text-foreground font-medium">{truncate(entry.situation, 60)}</p>
+                        <ZExpandableText text={entry.situation} lines={2} textClassName="text-sm text-foreground font-medium" noToggle />
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">{texts.journal.sudsShort}: {entry.sudsBefore}</span>
                           {entry.sudsAfter != null && <ZBadge variant="secondary">→ {entry.sudsAfter}</ZBadge>}
@@ -184,7 +180,7 @@ export function JournalHistory() {
       </div>
 
       {/* Floating new entry button */}
-      <div className="fixed bottom-20 left-4 right-4 max-w-lg mx-auto z-20">
+      <div className="sticky bottom-20 pt-3 z-20">
         <ZButton variant="primary" className="w-full gap-2" onClick={() => navigate('journal-new')}>
           <Plus size={20} strokeWidth={1.5} />
           {texts.journal.newEntry}

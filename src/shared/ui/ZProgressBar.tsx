@@ -52,7 +52,7 @@ export function ZProgressBar({
                   aria-hidden='true'
                 />
                 {labels?.[i] && (
-                  <span className='text-[11px] text-muted-foreground text-center leading-tight max-w-[60px] truncate'>
+                  <span className='text-[11px] text-muted-foreground text-center leading-tight max-w-[60px] truncate' title={labels[i]}>
                     {labels[i]}
                   </span>
                 )}

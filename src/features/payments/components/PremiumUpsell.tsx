@@ -6,6 +6,7 @@ import { Sparkles } from 'lucide-react';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZButton } from '@/shared/ui/ZButton';
 import { ZBadge } from '@/shared/ui/ZBadge';
+import { ZExpandableText } from '@/shared/ui/ZExpandableText';
 import { useRouterStore } from '@/shared/lib/stores';
 import { texts } from '@/shared/constants/texts';
 import { usePlans } from '../usePlans';
@@ -39,14 +40,12 @@ export function PremiumUpsell({ variant = 'card' }: PremiumUpsellProps) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {texts.common.premium}
-                </p>
-                <ZBadge variant="primary">{monthPrice}</ZBadge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                {texts.paywall.valueProp}
+              <p className="text-sm font-semibold text-foreground">
+                {texts.common.premium}
               </p>
+              <ZBadge variant="primary">{monthPrice}</ZBadge>
+              </div>
+              <ZExpandableText text={texts.paywall.valueProp} lines={1} textClassName="text-xs text-muted-foreground mt-0.5" noToggle />
             </div>
             <ZButton
               variant="secondary"

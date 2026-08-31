@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wind, TreePine, ArrowRight, Sparkles } from 'lucide-react';
-import { ZHeader } from '@/shared/ui/ZHeader';
 import { ZProgressBar } from '@/shared/ui/ZProgressBar';
 import { ZButton } from '@/shared/ui/ZButton';
 import { ZTextArea } from '@/shared/ui/ZTextArea';
@@ -149,17 +148,15 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
   }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, selectedPattern, addEntry, addPractice, showToast, onComplete]);
 
   const progressLabels = useMemo(
-    () => STEP_LABELS.map((label) => (label.length > 6 ? label.slice(0, 6) + '...' : label)),
+    () => STEP_LABELS.map((label) => label),
     [],
   );
 
   const anxietyIncreased = sudsAfter > sudsBefore;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <ZHeader title={texts.journal.newEntry} />
-
-      <div className="flex flex-col gap-5 px-4 pb-8 pt-4 max-w-lg mx-auto w-full">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-5 pb-8 pt-1 max-w-lg mx-auto w-full">
         <ZProgressBar steps={TOTAL_STEPS} currentStep={step + 1} labels={progressLabels} />
 
         <div className="relative overflow-hidden min-h-[340px]">

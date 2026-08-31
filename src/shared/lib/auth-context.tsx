@@ -31,12 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error: null,
   });
 
-  // При монтировании проверяем, авторизован ли пользователь
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const refresh = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
@@ -49,6 +43,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setState({ user: null, loading: false, error: null });
     }
+  }, []);
+
+  // При монтировании проверяем, авторизован ли пользователь.
+  // setState вызывается асинхронно (после await), что допустимо в эффекте.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (cancelled) return;
+        if (res.ok) {
+          const { user } = await res.json();
+          setState({ user, loading: false, error: null });
+        } else {
+          setState({ user: null, loading: false, error: null });
+        }
+      } catch {
+        if (!cancelled) setState({ user: null, loading: false, error: null });
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

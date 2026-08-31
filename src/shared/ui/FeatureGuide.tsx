@@ -80,8 +80,8 @@ export function FeatureGuide({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1.0] }}
-            className="fixed top-14 right-4 left-4 z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-soft-lg"
-            style={{ maxWidth: 'calc(100% - 2rem)', maxHeight: 'min(70vh, 500px)' }}
+            className="max-lg:fixed max-lg:inset-x-0 max-lg:top-14 max-lg:bottom-0 max-lg:rounded-b-none max-lg:max-h-none fixed top-14 right-4 left-4 z-30 max-h-[70vh] overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-soft-lg"
+            style={{ maxWidth: 'calc(100% - 2rem)' }}
           >
             {/* Title + description */}
             <h3 className="text-base font-semibold text-foreground">{title}</h3>

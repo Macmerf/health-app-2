@@ -70,14 +70,14 @@ export function CarePlanScreen() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div>
       <FeatureGuide {...CARE_PLAN_GUIDE} />
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
-        className="flex flex-col gap-5 px-4 pb-8 pt-4 max-w-lg mx-auto w-full"
+        className="flex flex-col gap-5 pb-8 pt-1"
       >
         {/* Признаки усталости */}
         <ZCard>

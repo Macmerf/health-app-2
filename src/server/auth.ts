@@ -1,5 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
@@ -38,7 +38,9 @@ let db: DatabaseSync | null = null;
 
 function resolveDbPath(): string {
   const dataDir = process.env.DATA_DIR ?? 'data';
-  return join(process.cwd(), dataDir, 'app.db');
+  // resolve (не join): абсолютный DATA_DIR (/app/data в проде) корректно
+  // заменяет cwd, а не склеивается с ним в /app/app/data
+  return resolve(process.cwd(), dataDir, 'app.db');
 }
 
 export function getAuthDb(): DatabaseSync {

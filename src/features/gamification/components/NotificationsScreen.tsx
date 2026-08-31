@@ -109,8 +109,8 @@ export function NotificationsScreen() {
 
   return (
     <FeatureGate featureKey='notifications'>
-      <div className="flex flex-col min-h-screen bg-background">
-        <div className="flex-1 px-4 py-6 space-y-6 max-w-lg mx-auto w-full">
+      <div>
+        <div className="flex-1 py-2 space-y-6">
         {/* Подзаголовок */}
         <p className="text-sm text-muted-foreground text-center">
           {texts.notifications.subtitle}

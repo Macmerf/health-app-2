@@ -1,6 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 export interface SubscriptionRow {
   user_id: string;
@@ -17,8 +17,10 @@ let db: DatabaseSync | null = null;
 
 function resolveDbPath(): string {
   const dataDir = process.env.DATA_DIR ?? 'data';
+  // resolve (не join): абсолютный DATA_DIR (/app/data в проде) корректно
+  // заменяет cwd, а не склеивается с ним в /app/app/data
   // Динамический путь из env — осознанное исключение из трейсинга Turbopack.
-  return join(/* turbopackIgnore: true */ process.cwd(), dataDir, 'app.db');
+  return resolve(/* turbopackIgnore: true */ process.cwd(), dataDir, 'app.db');
 }
 
 /** Лениво инициализирует SQLite (встроенный node:sqlite, Node >= 22.5). */

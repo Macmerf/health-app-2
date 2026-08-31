@@ -3,7 +3,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Hand, Ear, Flower2, Cherry, Sparkles } from 'lucide-react';
-import { ZHeader } from '@/shared/ui/ZHeader';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZInput } from '@/shared/ui/ZInput';
 import { ZButton } from '@/shared/ui/ZButton';
@@ -112,10 +111,8 @@ export function Grounding54321() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <ZHeader title={texts.carePlan.groundingTitle} />
-
-      <div className="flex flex-col gap-5 px-4 pb-8 pt-4 max-w-lg mx-auto w-full">
+    <div className="flex flex-col">
+      <div className="flex flex-col gap-5 pb-8 pt-1">
         <FeatureGuide
           guideId='grounding'
           title='Заземление 5-4-3-2-1'

@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
 import { ZInput } from '@/shared/ui/ZInput';
+import { ZExpandableText } from '@/shared/ui/ZExpandableText';
 import { clsx } from 'clsx';
 import { texts } from '@/shared/constants/texts';
 import { thoughtPatterns } from '../data/thought-patterns';
@@ -87,12 +88,10 @@ export function ThoughtPatternSelector({ value, onChange }: ThoughtPatternSelect
                       )}
                     </span>
                     <div className="flex flex-col gap-1 min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate">
+                      <span className="text-sm font-medium text-foreground">
                         {pattern.friendlyName}
                       </span>
-                      <span className="text-xs text-muted-foreground line-clamp-2">
-                        {pattern.description}
-                      </span>
+                      <ZExpandableText text={pattern.description} lines={2} textClassName="text-xs text-muted-foreground" />
                     </div>
                   </div>
                 </ZCard>

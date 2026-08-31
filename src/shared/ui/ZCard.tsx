@@ -31,7 +31,7 @@ export function ZCard({
     <div
       {...rest}
       className={clsx(
-        'rounded-2xl p-5',
+        'rounded-2xl p-4 sm:p-5',
         variantStyles[variant],
         isClickable && 'cursor-pointer transition-shadow duration-200 hover:shadow-soft',
         className,

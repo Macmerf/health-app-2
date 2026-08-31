@@ -299,7 +299,7 @@ function Router() {
 
       {showHeader && <ZHeader />}
 
-      <main className='flex-1 px-8 py-6 pb-24 lg:pb-8 max-w-lg lg:max-w-3xl mx-auto w-full'>
+      <main className='flex-1 px-4 py-4 pb-24 lg:pb-8 max-w-lg lg:max-w-3xl mx-auto w-full'>
         <PageTransition routeKey={route}>
           {renderRoute()}
         </PageTransition>

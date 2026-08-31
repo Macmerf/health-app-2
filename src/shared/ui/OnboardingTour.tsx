@@ -124,7 +124,7 @@ export function OnboardingTour() {
         <X size={20} strokeWidth={1.5} />
       </button>
 
-      <div className="mx-6 w-full max-w-sm">
+      <div className="max-lg:fixed max-lg:inset-0 max-lg:flex max-lg:flex-col max-lg:mx-0 max-lg:px-4 max-lg:pb-6 max-lg:pt-16 mx-6 w-full max-w-sm">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
@@ -134,7 +134,7 @@ export function OnboardingTour() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
-            className="flex flex-col items-center gap-5 rounded-3xl bg-card p-8 shadow-soft-lg"
+            className="max-lg:flex-1 max-lg:justify-center flex flex-col items-center gap-5 rounded-3xl bg-card p-8 shadow-soft-lg overflow-y-auto"
           >
             <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10">
               {currentStep.icon}

@@ -9,3 +9,4 @@ export { ZSegmentedControl, type ZSegmentedControlProps } from './ZSegmentedCont
 export { ZBottomNav } from './ZBottomNav';
 export { ZHeader, type ZHeaderProps } from './ZHeader';
 export { ZProgressBar, type ZProgressBarProps } from './ZProgressBar';
+export { ZExpandableText, type ZExpandableTextProps } from './ZExpandableText';

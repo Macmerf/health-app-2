@@ -43,11 +43,17 @@ export function ZBottomNav() {
         setMenuOpen(false);
       }
     };
+    // Escape тоже закрывает меню
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
     document.addEventListener('mousedown', handler);
     document.addEventListener('touchstart', handler);
+    document.addEventListener('keydown', escHandler);
     return () => {
       document.removeEventListener('mousedown', handler);
       document.removeEventListener('touchstart', handler);
+      document.removeEventListener('keydown', escHandler);
     };
   }, [menuOpen]);
 
@@ -104,9 +110,14 @@ export function ZBottomNav() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                 transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1.0] }}
-                className='absolute bottom-full right-0 mb-2 w-56 rounded-2xl border border-border bg-card p-1.5 shadow-soft-lg max-h-[70vh] overflow-y-auto'
+                className='max-lg:fixed max-lg:inset-0 max-lg:z-40 max-lg:mb-0 max-lg:rounded-none max-lg:border-0 max-lg:px-4 max-lg:pb-24 max-lg:pt-4 max-lg:overflow-y-auto max-lg:bg-card'
+                onClick={() => setMenuOpen(false)}
                 role='menu'
               >
+                <div
+                  className='lg:absolute lg:bottom-full lg:right-0 lg:mb-2 lg:w-56 lg:rounded-2xl lg:border lg:border-border lg:bg-card lg:p-1.5 lg:shadow-soft-lg lg:max-h-[70vh] lg:overflow-y-auto'
+                  onClick={(e) => e.stopPropagation()}
+                >
                 {MENU_ITEMS.map((item) => (
                   <button
                     key={item.route}
@@ -124,6 +135,7 @@ export function ZBottomNav() {
                     )}
                   </button>
                 ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

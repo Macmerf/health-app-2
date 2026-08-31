@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ZCard } from '@/shared/ui/ZCard';
+import { ZExpandableText } from '@/shared/ui/ZExpandableText';
 import { AchievementIcon } from './AchievementIcon';
 import type { Achievement } from '@/shared/schemas';
 
@@ -33,7 +34,7 @@ export function AchievementUnlocked({
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
       className="pointer-events-auto"
     >
-      <ZCard variant="elevated" className="flex items-center gap-3.5 max-w-[320px]">
+      <ZCard variant="elevated" className="flex items-center gap-3.5 max-w-[360px]">
         <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/15 text-primary shrink-0">
           <AchievementIcon name={achievement.icon} />
         </div>
@@ -41,12 +42,10 @@ export function AchievementUnlocked({
           <p className="text-xs font-medium text-primary mb-0.5">
             Новое достижение!
           </p>
-          <p className="text-sm font-semibold text-foreground truncate">
+          <p className="text-sm font-semibold text-foreground truncate" title={achievement.name}>
             {achievement.name}
           </p>
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {achievement.description}
-          </p>
+          <ZExpandableText text={achievement.description} lines={2} textClassName="text-xs text-muted-foreground" noToggle />
         </div>
       </ZCard>
     </motion.div>

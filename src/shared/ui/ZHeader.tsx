@@ -57,6 +57,7 @@ export function ZHeader({ title, className }: ZHeaderProps) {
           'flex-1 text-lg font-semibold text-foreground truncate text-center',
           !isHome && 'pr-9', // offset back button width for centering
         )}
+        title={displayTitle}
       >
         {displayTitle}
       </h1>
