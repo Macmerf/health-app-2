@@ -9,7 +9,7 @@ services:
     # Образ собирается в GitHub Actions и публикуется в GHCR (см. deploy.yml).
     # VPS больше не собирает Next.js на своих 2 vCPU — только pull + restart.
     # Имя должно совпадать с IMAGE_NAME в deploy.yml (только строчные буквы!).
-    image: ghcr.io/macmerf/health-app-2:latest
+    image: ghcr.io/Macmerf/health-app-2:latest
     container_name: zabota
     restart: unless-stopped
     ports:

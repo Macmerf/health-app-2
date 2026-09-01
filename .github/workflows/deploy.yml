@@ -11,7 +11,7 @@ env:
   REGISTRY: ghcr.io
   # ВАЖНО: только строчные буквы — GHCR не принимает заглавные в имени образа.
   # (github.repository = Macmerf/health-app-2 — с заглавной, поэтому хардкод.)
-  IMAGE_NAME: macmerf/health-app-2
+  IMAGE_NAME: Macmerf/health-app-2
 
 jobs:
   build:
