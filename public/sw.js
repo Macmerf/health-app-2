@@ -28,7 +28,15 @@ self.addEventListener('activate', (event) => {
       Promise.all(
         keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
       )
-    )
+    ).then(() => caches.open(CACHE_NAME))
+      .then((cache) =>
+        // Одноразовая очистка: в старых версиях SW в кэш попадали API-ответы
+        // с персональными данными (см. fetch-обработчик выше).
+        Promise.all(
+          cache.keys().filter((req) => new URL(req.url).pathname.startsWith('/api/'))
+            .map((req) => cache.delete(req))
+        )
+      )
   );
   self.clients.claim();
 });
@@ -46,18 +54,10 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return;
 
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
-    return;
-  }
+  // API не кэшируем: ответы содержат персональные данные (дневник, entitlement),
+  // а актуальность критична. Данные для офлайна и так живут в IndexedDB.
+  // Кэш API-ответов также раздувал хранилище и замедлял sync.
+  if (url.pathname.startsWith('/api/')) return;
 
   // Навигация — network-first: после деплоя пользователи сразу видят свежую версию,
   // а офлайн-фолбэк на кэш остаётся для работы без сети.

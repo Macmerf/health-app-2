@@ -1,10 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Onest } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/shared/ui/app-shell";
 import { AuthProvider } from "@/shared/lib/auth-context";
-import { DataSyncProvider } from "@/shared/lib/data-sync-context";
+import { StoreSyncProvider } from "@/shared/lib/store-sync.tsx";
 import { TanStackProvider } from "@/shared/lib/query-provider";
 import { PwaUpdateBanner } from "@/shared/ui/PwaUpdateBanner";
+
+// Self-hosted шрифт через next/font: css+woff2 инлайнятся в билд,
+// без внешних запросов на fonts.googleapis.com. Только нужные веса.
+const onest = Onest({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-onest",
+});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://zabotapsy.ru";
 
@@ -83,7 +93,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning className={onest.variable}>
       <head>
         <link rel="icon" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -95,12 +105,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="antialiased bg-background text-foreground min-h-screen">
         <TanStackProvider>
           <AuthProvider>
-            <DataSyncProvider>
+            <StoreSyncProvider>
               <AppShell>
                 {children}
                 <PwaUpdateBanner />
               </AppShell>
-            </DataSyncProvider>
+            </StoreSyncProvider>
           </AuthProvider>
         </TanStackProvider>
       </body>

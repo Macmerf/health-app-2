@@ -13,22 +13,40 @@ const PremiumFab = dynamic(() => import('@/shared/ui/PremiumFab').then(m => ({ d
 import { texts } from '@/shared/constants/texts';
 
 import { HomePage } from '@/shared/ui/HomePage';
-import { JournalWizard } from '@/features/journal';
-import { JournalHistory } from '@/features/journal';
-import { HierarchyList } from '@/features/exposure';
-import { HierarchyBuilder } from '@/features/exposure';
-import { ExposureSession } from '@/features/exposure';
-import { CarePlanScreen } from '@/features/care-plan';
-import { BreathingExercise } from '@/features/care-plan';
-import { Grounding54321 } from '@/features/care-plan';
-import { AchievementsGallery } from '@/features/gamification';
-import { NotificationsScreen } from '@/features/gamification';
-import { PaywallScreen } from '@/features/payments';
-import { MoodTracker } from '@/features/mood';
-import { CareTree } from '@/features/care-tree';
-import { ThemePicker } from '@/features/themes';
-import { BodyScan } from '@/features/body-scan';
-import { DataExport } from '@/features/export';
+
+/**
+ * Код-сплиттинг экранов: каждый экран — отдельный чанк, грузится по требованию.
+ * Раньше все 20+ экранов (включая recharts и dnd-kit) были в главном бандле —
+ * старт занимал секунды на парсинг мегабайтов JS. Скелетон смягчает паузу.
+ */
+const screenLoading = (
+  <div className='space-y-3 py-8' aria-busy='true'>
+    <div className='h-6 w-40 rounded-lg bg-muted animate-pulse' />
+    <div className='h-24 rounded-2xl bg-muted animate-pulse' />
+    <div className='h-24 rounded-2xl bg-muted animate-pulse' />
+  </div>
+);
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const dynamicScreen = (loader: () => Promise<{ default: any }>) =>
+  dynamic(loader as any, { ssr: false, loading: () => screenLoading });
+
+const JournalWizard = dynamicScreen(() => import('@/features/journal').then(m => ({ default: m.JournalWizard })));
+const JournalHistory = dynamicScreen(() => import('@/features/journal').then(m => ({ default: m.JournalHistory })));
+const HierarchyList = dynamicScreen(() => import('@/features/exposure').then(m => ({ default: m.HierarchyList })));
+const HierarchyBuilder = dynamicScreen(() => import('@/features/exposure').then(m => ({ default: m.HierarchyBuilder })));
+const ExposureSession = dynamicScreen(() => import('@/features/exposure').then(m => ({ default: m.ExposureSession })));
+const CarePlanScreen = dynamicScreen(() => import('@/features/care-plan').then(m => ({ default: m.CarePlanScreen })));
+const BreathingExercise = dynamicScreen(() => import('@/features/care-plan').then(m => ({ default: m.BreathingExercise })));
+const Grounding54321 = dynamicScreen(() => import('@/features/care-plan').then(m => ({ default: m.Grounding54321 })));
+const AchievementsGallery = dynamicScreen(() => import('@/features/gamification').then(m => ({ default: m.AchievementsGallery })));
+const NotificationsScreen = dynamicScreen(() => import('@/features/gamification').then(m => ({ default: m.NotificationsScreen })));
+const PaywallScreen = dynamicScreen(() => import('@/features/payments').then(m => ({ default: m.PaywallScreen })));
+const MoodTracker = dynamicScreen(() => import('@/features/mood').then(m => ({ default: m.MoodTracker })));
+const CareTree = dynamicScreen(() => import('@/features/care-tree').then(m => ({ default: m.CareTree })));
+const ThemePicker = dynamicScreen(() => import('@/features/themes').then(m => ({ default: m.ThemePicker })));
+const BodyScan = dynamicScreen(() => import('@/features/body-scan').then(m => ({ default: m.BodyScan })));
+const DataExport = dynamicScreen(() => import('@/features/export').then(m => ({ default: m.DataExport })));
 
 import {
   BarChart3,
@@ -48,7 +66,8 @@ import { ZBadge } from '@/shared/ui/ZBadge';
 import { usePaymentStore } from '@/features/payments';
 import { OnboardingTour } from '@/shared/ui/OnboardingTour';
 import { useOnboardingStore } from '@/shared/lib/onboarding-store';
-import { AnalyticsPageInner } from '@/shared/ui/AnalyticsPageInner';
+
+const AnalyticsPageInner = dynamicScreen(() => import('@/shared/ui/AnalyticsPageInner').then(m => ({ default: m.AnalyticsPageInner })));
 
 function SettingsPage() {
   const theme = useThemeStore((s) => s.theme);
@@ -253,8 +272,11 @@ function Router() {
         return <HomePage />;
       case 'journal':
         return <JournalHistory />;
-      case 'journal-new':
-        return <JournalWizard onComplete={() => useRouterStore.getState().navigate('journal')} />;
+      case 'journal-new': {
+        // dynamic() возвращает тип с props: unknown; приводим к реальным props компонента.
+        const Wizard = JournalWizard as unknown as React.ComponentType<{ onComplete: () => void }>;
+        return <Wizard onComplete={() => useRouterStore.getState().navigate('journal')} />;
+      }
       case 'exposure':
         return <HierarchyList />;
       case 'exposure-new':

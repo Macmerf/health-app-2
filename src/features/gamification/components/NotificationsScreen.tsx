@@ -32,7 +32,7 @@ interface NotificationSettingsStore {
   setBreathingReminder: (value: boolean) => void;
 }
 
-const useNotificationSettingsStore = create<NotificationSettingsStore>()(
+export const useNotificationSettingsStore = create<NotificationSettingsStore>()(
   persist(
     (set) => ({
       enabled: false,

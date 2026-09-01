@@ -1,4 +1,11 @@
 :81 {
+	# Сжатие ответов: JSON/JS/CSS сжимаются на 60-80% — быстрее отдача и меньше трафика.
+	encode zstd gzip
+
+	# Хешированная статика Next.js (имя файла меняется при каждом билде) — кеш на год.
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
 	# Статичный апстрим: никаких портов из query — это была SSRF-уязвимость.
 	reverse_proxy localhost:3000 {
 		header_up Host {host}

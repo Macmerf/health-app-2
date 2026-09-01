@@ -10,6 +10,7 @@ import { ZExpandableText } from '@/shared/ui/ZExpandableText';
 import { useToast } from '@/shared/ui/ZToast';
 import { texts } from '@/shared/constants/texts';
 import { useJournalStore } from '../store';
+import { useHydrated } from '@/shared/lib/storage';
 import { FeatureGuide } from '@/shared/ui/FeatureGuide';
 import { useRouterStore } from '@/shared/lib/stores';
 
@@ -59,6 +60,7 @@ const itemVariants = {
 export function JournalHistory() {
   const entries = useJournalStore((s) => s.entries);
   const deleteEntry = useJournalStore((s) => s.deleteEntry);
+  const hydrated = useHydrated('zabotapsy-journal');
   const { showToast } = useToast();
   const navigate = useRouterStore((s) => s.navigate);
 
@@ -80,7 +82,18 @@ export function JournalHistory() {
     <div className="flex flex-col">
       <FeatureGuide {...JOURNAL_GUIDE} />
       <div className="flex-1 py-1">
-        {sorted.length === 0 ? (
+        {!hydrated ? (
+          /* Скелетон: стор ещё читается из IndexedDB — не показываем ложное «пусто» */
+          <div className="flex flex-col gap-3" aria-busy="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-2xl border border-border/60 bg-card p-4 space-y-2">
+                <div className="h-3 w-32 rounded bg-muted animate-pulse" />
+                <div className="h-4 w-full rounded bg-muted animate-pulse" />
+                <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
             <span className="text-4xl" aria-hidden="true">📓</span>
             <p className="text-sm text-muted-foreground">{texts.journal.emptyHistory}</p>

@@ -1,9 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource/onest/400.css";
-@import "@fontsource/onest/500.css";
-@import "@fontsource/onest/600.css";
-@import "@fontsource/onest/700.css";
+/* Шрифт Onest подключается через next/font (layout.tsx): self-hosted,
+   только нужные веса (400/500/600/700), сабсеты без неиспользуемых глифов,
+   swap без layout shift. @fontsource-импорты убраны — каждый тянул отдельный CSS
+   с десятками @font-face, что замедляло первую загрузку. */
 
 @custom-variant dark (&:is(.dark *));
 @custom-variant theme-warm (&:is(.theme-warm *));
@@ -11,7 +11,7 @@
 @custom-variant theme-ocean (&:is(.theme-ocean *));
 
 @theme inline {
-  --font-sans: "Onest", sans-serif;
+  --font-sans: var(--font-onest), "Onest", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -204,7 +204,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Onest", sans-serif;
+    font-family: var(--font-onest), "Onest", sans-serif;
     font-size: 17px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;

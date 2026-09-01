@@ -6,12 +6,10 @@
 # ============================================================
 services:
   web:
-    build:
-      context: .
-      args:
-        # Прод-домен, вшивается в бандл на этапе сборки (canonical/OG/sitemap)
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://zabotapsy.ru}
-    image: zabota:latest
+    # Образ собирается в GitHub Actions и публикуется в GHCR (см. deploy.yml).
+    # VPS больше не собирает Next.js на своих 2 vCPU — только pull + restart.
+    # Имя должно совпадать с IMAGE_NAME в deploy.yml (только строчные буквы!).
+    image: ghcr.io/macmerf/health-app-2:latest
     container_name: zabota
     restart: unless-stopped
     ports:
@@ -19,12 +17,27 @@ services:
     environment:
       - NODE_ENV=production
       - DATA_DIR=/app/data
-      # Остальные env (JWT_SECRET, YooKassa, цены) — в .env на сервере,
+      # Node heap ограничен явно: 4 ГБ RAM на VPS — не даём Node съесть всё.
+      - NODE_OPTIONS=--max-old-space-size=512
+      # Остальные env (YooKassa, цены) — в .env на сервере,
       # подключаются через env_file ниже. Не коммить .env в git!
     env_file:
       - .env
     volumes:
       - app-data:/app/data
+    deploy:
+      resources:
+        limits:
+          # Жёсткий потолок контейнера: приложение лёгкое (SQLite, без тяжёлого SSR),
+          # 768 МБ достаточно с запасом; остальная RAM — ОС, Caddy и page cache.
+          memory: 768M
+    healthcheck:
+      # Лёгкий internal-пробер: fetch доступен в Node 24 без зависимостей.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/payments').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
   app-data:

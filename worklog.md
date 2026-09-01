@@ -51,3 +51,49 @@ Work Log:
 
 Stage Summary:
 - Источник цен — env на сервере; смена цены в .env сразу видна в UI без правок кода
+
+---
+Task ID: perf-vps-optimization
+Agent: Koda
+Task: Оптимизация под VPS 2 vCPU/4GB + ускорение старта приложения
+
+Work Log:
+- page.tsx: код-сплиттинг всех 16 экранов через next/dynamic со скелетоном — раньше все экраны (recharts, dnd-kit, платежи) жили в главном бандле
+- sw.js: убрано кэширование /api/* в Cache API (персональные данные + замедление sync); одноразовая очистка старых API-записей в activate
+- db.ts/auth.ts/data-store.ts: PRAGMA journal_mode=WAL, busy_timeout=5000, synchronous=NORMAL — меньше SQLITE_BUSY и CPU на конкурентных запросах
+- Шрифт Onest переведён с 4 @fontsource CSS на next/font (self-hosted, сабсеты latin+cyrillic, swap); @fontsource/onest удалён
+- Удалены неиспользуемые зависимости: next-intl, @tanstack/react-table, uuid
+- CI: .github/workflows/ci.yml (lint + tsc + unit-тесты) на каждый PR/push
+- deploy.yml: сборка Docker-образа перенесена в GitHub Actions (buildx + GHCR, кеш слоёв gha); VPS делает только git pull + docker compose pull + up -d — Next.js build больше не жжёт 2 vCPU сервера
+- docker-compose.yml: image из GHCR вместо build on VPS, добавлен healthcheck
+- Проверка: tsc ✓, eslint ✓, 27 unit-тестов ✓, next build ✓; свежий бандл 31 чанк / 1.79 МБ (было 6 чанков по ~1.1 МБ в критическом пути)
+
+Stage Summary:
+- Старт приложения быстрее: главный экран грузит компактный бандл, тяжёлые библиотеки — лениво по требованию
+- Деплой не нагружает CPU VPS: сборка в CI, сервер только тянет готовый образ
+- SQLite переведён на WAL — выше производительность и стабильность под конкурентной нагрузкой
+
+---
+Task ID: sync-compression-hydration
+Agent: Koda
+Task: Рабочая синхронизация сторов (LWW) + gzip-сжатие данных + hydration-скелетоны + лимиты RAM
+
+Work Log:
+- src/server/data-store.ts: gzip-сжатие значений >1 КБ (префикс gz:, level 6) — дневниковые JSON сжимаются в 3-6 раз; getAllUserDataWithMeta() отдаёт value+version+updatedAt; syncData переписан на LWW: совпадение версии → update, конфликт → побеждает более свежий updatedAt
+- src/app/api/data/sync GET: теперь возвращает версии и время изменений (клиент может честно делать LWW)
+- src/shared/lib/store-sync.tsx (новый): единый движок синхронизации всех persist-сторов (journal, exposure, careplan, mood, care-tree, achievements, notification-settings); pull при логине с LWW-мержем, push с debounce 3 c / max wait 30 c, подписка на изменения сторов, anti-loop флаг applyingRemote, повтор push при ошибке сети и на visibilitychange/online; версии в localStorage (zabotapsy-sync-meta)
+- src/app/layout.tsx: DataSyncProvider заменён на StoreSyncProvider; удалены мёртвые data-sync-context.tsx и use-data-sync.ts
+- src/shared/lib/storage.ts: onRehydrateStorage помечает hydration флагом + хук useHydrated(name)
+- JournalHistory, HierarchyList: hydration-скелетоны вместо мигающего «нет записей» при чтении IndexedDB
+- docker-compose.yml: NODE_OPTIONS=--max-old-space-size=512, deploy.resources.limits.memory=768M — защита RAM 4 ГБ VPS
+- Caddyfile: encode zstd gzip (60-80% экономии трафика), Cache-Control immutable для /_next/static
+- tests/data-store.test.ts: +3 теста (LWW клиент-побеждает, LWW сервер-побеждает, gzip roundtrip + проверка префикса gz:); 30 pass
+- Проверка: tsc ✓, eslint ✓, 30/30 тестов ✓, next build ✓
+
+Stage Summary:
+- Синхронизация реально работает: данные всех сторов едут на сервер при изменениях и возвращаются на других устройствах; конфликты решаются по времени изменения
+- Данные на сервере сжаты gzip'ом — экономия диска и RAM; критично для 2 vCPU/4 ГБ
+- Старт UI без ложных «пустых экранов»: скелетоны на время hydration IndexedDB
+- RAM сервера ограничена (768M контейнер + 512M heap), исходящий трафик сжат на уровне Caddy
+
+

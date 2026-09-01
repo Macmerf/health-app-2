@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/server/auth-middleware';
-import { getAllUserData, syncData } from '@/server/data-store';
+import { getAllUserDataWithMeta, syncData } from '@/server/data-store';
 import { rateLimit, getRateLimitHeaders } from '@/server/rate-limiter';
 
 const MAX_ITEMS = 500;
@@ -13,7 +13,9 @@ function getClientIp(req: NextRequest): string {
 }
 
 /**
- * GET /api/data/sync — получить все данные пользователя
+ * GET /api/data/sync — получить все данные пользователя с версиями.
+ * Формат: { data: { [key]: { value, version, updatedAt } } }
+ * Клиент сравнивает версии и решает, чьи данные свежее (LWW).
  * POST /api/data/sync — синхронизировать данные (push)
  */
 export async function GET(req: NextRequest) {
@@ -30,7 +32,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const data = getAllUserData(auth.user.id);
+  const data = getAllUserDataWithMeta(auth.user.id);
   return NextResponse.json({ data });
 }
 

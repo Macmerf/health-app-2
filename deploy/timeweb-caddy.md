@@ -3,6 +3,10 @@
 Что получится в конце: сайт `https://zabotapsy.ru` работает, при `git push` в ветку `main`
 приложение само обновляется на сервере, данные (SQLite) не теряются.
 
+> **Краткая шпаргалка «как включить автодеплой» — в конце файла, раздел
+> «Настройка автодеплоя с нуля». Вся инструкция ниже — про первый ручной
+> запуск сервера.**
+
 ---
 
 ## Шаг 0. Что нужно перед стартом
@@ -273,33 +277,46 @@ journalctl -u caddy -f         # логи Caddy
 
 ## Шаг 11. Обновления
 
+### Как это работает теперь (сборка в GitHub, а не на сервере)
+
+С сентября 2026 образ приложения собирается **в GitHub Actions** (4 vCPU) и
+публикуется в GitHub Container Registry (GHCR). Сервер больше **не собирает**
+Next.js на своих 2 vCPU — он только скачивает готовый образ. Деплой из минут
+нагрузки CPU превратился в секундный `docker pull`.
+
 ### Вручную (самый простой способ)
 
-На своём ПК: `git push` → на сервере:
+На своём ПК: `git push` → подожди, пока зелёный workflow «Build and Deploy»
+закончится в GitHub (вкладка Actions), затем на сервере:
 
 ```bash
 cd /opt/zabota
 git pull
-docker compose up -d --build
+docker compose pull web
+docker compose up -d
 ```
 
-Данные подписок (SQLite в volume `app-data`) при этом **не теряются**.
+Данные (SQLite в volume `app-data`) при этом **не теряются**.
 
 ### Автоматически (GitHub Actions)
 
-В репозитории уже лежит workflow `.github/workflows/deploy.yml`:
-каждый push в `main` сам обновит сервер. Один раз настроить:
+В репозитории лежит workflow `.github/workflows/deploy.yml`:
+каждый push в `main` сам собирает образ и обновляет сервер. Один раз настроить:
 
-1. На своём ПК сгенерируй SSH-ключ (в PowerShell):
+1. Публичный пакет GHCR должен быть доступен серверу без логина. Проще всего:
+   GitHub → твой профиль → **Packages** → пакет репозитория →
+   **Package settings** → **Change visibility** → **Public**.
+   (Либо логин из GITHUB_TOKEN на сервере — сложнее, см. troubleshooting.)
+2. На своём ПК сгенерируй SSH-ключ (в PowerShell):
    ```powershell
    ssh-keygen -t ed25519 -f $env:USERPROFILE\.ssh\deploy_key -N '""'
    ```
    Появятся 2 файла: `deploy_key` (приватный) и `deploy_key.pub` (публичный).
-2. Публичный ключ — на сервер:
+3. Публичный ключ — на сервер:
    ```powershell
    type $env:USERPROFILE\.ssh\deploy_key.pub | ssh root@185.104.x.x "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
    ```
-3. Приватный ключ — в GitHub: репозиторий → **Settings** → **Secrets and
+4. Приватный ключ — в GitHub: репозиторий → **Settings** → **Secrets and
    variables** → **Actions** → **New repository secret**. Создай три секрета:
    - `SSH_HOST` → IP сервера
    - `SSH_USER` → `root`
@@ -315,18 +332,147 @@ docker compose up -d --build
 
 | Симптом | Что делать |
 |---|---|
-| Сайт не открывается | `docker compose ps` — контейнер `zabota` должен быть `Up` |
+| Сайт не открывается | `docker compose ps` — контейнер `zabota` должен быть `Up (healthy)` |
 | Ошибка 502 Bad Gateway | Приложение ещё поднимается или упало: `docker compose logs -f web` |
+| `docker compose pull` пишет «denied» | Пакет GHCR приватный — сделай его Public (шаг 11) |
+| `docker compose pull` тянет старый образ | Проверь, что workflow «Build and Deploy» в GitHub зелёный |
 | `docker compose up` пишет «Cannot connect to Docker» | Docker не запущен: `systemctl start docker` |
-| Сборка падает с «Killed» | Мало RAM — сделай swap (шаг 4.4) или возьми тариф больше |
 | Сертификат не выдаётся | DNS ещё не обновился (шаг 2) или порты 80/443 закрыты |
 | Забыл пароль root | Панель Timeweb → сервер → вкладка «Доступ» → сбросить пароль |
 
 Полезные команды:
 
 ```bash
-docker compose ps              # статус контейнеров
+docker compose ps              # статус контейнеров (healthcheck)
 docker compose logs -f web     # логи приложения
-docker compose up -d --build   # пересобрать и перезапустить
+docker compose pull web && docker compose up -d   # обновить до свежего образа
 docker compose down            # остановить (данные в volume останутся)
 ```
+
+### Бэкап базы (обязательно настрой)
+
+SQLite с подписками лежит в volume `app-data`. Раз в сутки сохраняй копию:
+`crontab -e` → добавь строку:
+
+```bash
+0 4 * * * docker exec zabota node -e "const{DatabaseSync}=require('node:sqlite');const s=new DatabaseSync('/app/data/app.db');s.exec(\"VACUUM INTO '/tmp/backup.db'\");console.log('ok')" && docker cp zabota:/tmp/backup.db /opt/zabota/backups/backup-$(date +\%F).db && find /opt/zabota/backups -name 'backup-*.db' -mtime +14 -delete
+```
+
+(Папку создай заранее: `mkdir -p /opt/zabota/backups`.)
+
+---
+
+## Настройка автодеплоя с нуля (шпаргалка)
+
+Считаем, что сервер уже запущен вручную (шаги 1–10 выше), сайт открывается.
+Дальше — 6 шагов, чтобы каждый `git push` в `main` сам обновлял сервер.
+
+> Ваш репозиторий: `Macmerf/health-app-2`. Имя образа в GHCR будет
+> `ghcr.io/macmerf/health-app-2:latest` (только строчные буквы — так требует
+> GHCR). Это уже прописано в `deploy.yml` и `docker-compose.yml` — ничего
+> править не нужно.
+
+### Шаг A. Запушьте код с workflow-файлами
+
+На своём ПК:
+
+```powershell
+git add .
+git commit -m "ci: build in GitHub Actions, deploy via GHCR"
+git push origin main
+```
+
+⚠️ **Первый прогон упадёт на шаге deploy — это нормально**: секреты ещё не
+созданы (шаг D) и пакета GHCR ещё не существует (шаг B). Зато шаг **build**
+успешно соберёт и опубликует образ в GHCR.
+
+### Шаг B. Сделайте пакет GHCR публичным
+
+Без этого сервер не сможет скачать образ (pull без логина).
+
+1. Откройте `https://github.com/Macmerf?tab=packages`
+2. Найдите пакет **health-app-2** (появится после первого успешного build).
+3. Зайдите в пакет → внизу **Package settings**.
+4. Внизу страницы **Danger Zone** → **Change visibility** → **Public** →
+   введите имя пакета для подтверждения.
+
+Проверка (на сервере или локально с docker):
+
+```bash
+docker pull ghcr.io/macmerf/health-app-2:latest
+```
+
+Качается без запроса логина → всё ок.
+
+### Шаг C. Сгенерируйте SSH-ключ деплоя
+
+На своём ПК (PowerShell):
+
+```powershell
+ssh-keygen -t ed25519 -f $env:USERPROFILE\.ssh\deploy_key -N '""'
+```
+
+Появятся два файла в `C:\Users\ТвойЮзер\.ssh\`:
+- `deploy_key` — приватный (уйдёт в GitHub secrets)
+- `deploy_key.pub` — публичный (уйдёт на сервер)
+
+### Шаг D. Разрешите серверу принимать этот ключ
+
+```powershell
+type $env:USERPROFILE\.ssh\deploy_key.pub | ssh root@IP_СЕРВЕРА "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
+```
+
+(замените `IP_СЕРВЕРА` на реальный IP; попросят пароль root — введите).
+
+### Шаг E. Добавьте три секрета в GitHub
+
+Откройте: `https://github.com/Macmerf/health-app-2/settings/secrets/actions`
+→ **New repository secret** — три раза:
+
+| Name | Secret (что вставить) |
+|---|---|
+| `SSH_HOST` | IP сервера, например `185.104.114.12` |
+| `SSH_USER` | `root` |
+| `SSH_PRIVATE_KEY` | **Всё содержимое файла** `deploy_key` (открыть в блокноте: скопировать от `-----BEGIN OPENSSH PRIVATE KEY-----` до `-----END OPENSSH PRIVATE KEY-----` включительно, вместе с переводами строк) |
+
+### Шаг F. Запустите деплой и проверьте
+
+1. Зайдите во вкладку **Actions** репозитория.
+2. Выберите упавший ранее workflow **Build and Deploy** → справа сверху
+   кнопка **Re-run all jobs**. (Либо просто сделайте любой новый `git push`.)
+3. Через 3–6 минут оба пункта (build, deploy) должны стать зелёными.
+4. Проверка на сервере:
+
+```bash
+cd /opt/zabota
+docker compose ps        # контейнер zabota: Up (healthy)
+docker compose logs web --tail 20   # нет ошибок
+```
+
+5. Откройте `https://zabotapsy.ru`, внесите любой фикс в код, `git push` —
+   через несколько минут сайт обновился сам. Автодеплой работает.
+
+### Как это устроено (чтобы понимать схему)
+
+```
+git push → GitHub Actions:
+  job build: собирает Docker-образ (Next.js build на мощностях GitHub,
+             не на вашем VPS!) и публикует в ghcr.io/macmerf/health-app-2:latest
+  job deploy: по SSH заходит на VPS и делает
+             git pull → docker compose pull web → docker compose up -d
+```
+
+Передеплой занимает 2–5 минут (сборка в облаке + секунды на сервере).
+База данных и `.env` на сервере не трогаются — данные не теряются.
+
+### Частые проблемы
+
+| Симптом | Причина и решение |
+|---|---|
+| Build: `denied: installation not allowed to Create package` | Actions не имеет прав на packages: в workflow уже стоит `permissions: packages: write` — проверьте, что файл запушен |
+| Build: `invalid reference format` | В IMAGE_NAME есть заглавные буквы — в deploy.yml имя захардкожено строчными, не меняйте |
+| Deploy: `Permission denied (publickey)` | Секрет `SSH_PRIVATE_KEY` скопирован не полностью (нет BEGIN/END строк) или публичный ключ не добавлен на сервер (шаг D) |
+| Deploy: `denied` на `docker compose pull` | Пакет GHCR ещё приватный — шаг B |
+| Deploy: `Cannot connect to Docker` | На сервере не запущен Docker: `systemctl start docker` |
+| Deploy зелёный, но сайт старый | Браузер кэширует — Ctrl+F5; либо проверьте, что docker-compose.yml на сервере обновился после `git pull` (образ `ghcr.io/macmerf/health-app-2`) |
+| 502 после деплоя | Подождите 20–30 сек (start_period healthcheck); если дольше — `docker compose logs -f web` |

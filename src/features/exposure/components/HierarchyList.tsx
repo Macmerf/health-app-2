@@ -11,6 +11,7 @@ import { ZButton } from '@/shared/ui/ZButton';
 import { useToast } from '@/shared/ui/ZToast';
 import { useRouterStore } from '@/shared/lib/stores';
 import { useExposureStore } from '../store';
+import { useHydrated } from '@/shared/lib/storage';
 import { texts } from '@/shared/constants/texts';
 import { FeatureGuide } from '@/shared/ui/FeatureGuide';
 
@@ -56,6 +57,7 @@ const formatDate = (iso: string) => {
 export function HierarchyList() {
   const hierarchies = useExposureStore((s) => s.hierarchies);
   const deleteHierarchy = useExposureStore((s) => s.deleteHierarchy);
+  const hydrated = useHydrated('zabotapsy-exposure');
   const navigate = useRouterStore((s) => s.navigate);
   const { showToast } = useToast();
 
@@ -99,8 +101,18 @@ export function HierarchyList() {
           Создать лестницу
         </ZButton>
 
-        {/* Empty state */}
-        {hierarchies.length === 0 ? (
+        {/* Hydration-скелетон / пустое состояние */}
+        {!hydrated ? (
+          <div className="flex flex-col gap-3" aria-busy="true">
+            {[0, 1].map((i) => (
+              <div key={i} className="rounded-2xl border border-border/60 bg-card p-4 space-y-2">
+                <div className="h-4 w-40 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-full rounded bg-muted animate-pulse" />
+                <div className="h-3 w-2/3 rounded bg-muted animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : hierarchies.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

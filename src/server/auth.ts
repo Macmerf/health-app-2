@@ -51,8 +51,12 @@ export function getAuthDb(): DatabaseSync {
 
   db = new DatabaseSync(path);
 
-  // Таблица пользователей
+  // WAL + busy_timeout — см. db.ts: меньше CPU на конкурентных запросах.
   db.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA busy_timeout = 5000;
+    PRAGMA synchronous = NORMAL;
+
     CREATE TABLE IF NOT EXISTS users (
       id           TEXT PRIMARY KEY,
       email        TEXT UNIQUE NOT NULL,

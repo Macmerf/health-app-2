@@ -31,7 +31,15 @@ export function getDb(): DatabaseSync {
   mkdirSync(dirname(path), { recursive: true });
 
   db = new DatabaseSync(path);
+
+  // WAL: читатели не блокируют писателя и наоборот; fsync только в WAL-файл.
+  // busy_timeout: вместо мгновенного SQLITE_BUSY при конкурентной записи —
+  // короткое ожидание. На 2 vCPU это заметно снижает CPU-нагрузку.
   db.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA busy_timeout = 5000;
+    PRAGMA synchronous = NORMAL;
+
     CREATE TABLE IF NOT EXISTS subscriptions (
       user_id         TEXT PRIMARY KEY,
       tier            TEXT NOT NULL DEFAULT 'free',
