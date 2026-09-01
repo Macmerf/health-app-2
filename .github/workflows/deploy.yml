@@ -43,17 +43,25 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          # Эфемерный токен (живёт только пока идёт job) — им логинимся в GHCR на VPS,
+          # чтобы docker compose pull мог скачать приватный образ.
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GHCR_TOKEN
           script: |
             set -e
             cd /opt/zabota
             git pull
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull web
             docker compose up -d
             docker image prune -f
