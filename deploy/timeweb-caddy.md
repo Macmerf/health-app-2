@@ -367,8 +367,8 @@ SQLite с подписками лежит в volume `app-data`. Раз в сут
 Считаем, что сервер уже запущен вручную (шаги 1–10 выше), сайт открывается.
 Дальше — 6 шагов, чтобы каждый `git push` в `main` сам обновлял сервер.
 
-> Ваш репозиторий: `Macmerf/health-app-2`. Имя образа в GHCR будет
-> `ghcr.io/Macmerf/health-app-2:latest` (только строчные буквы — так требует
+> Ваш репозиторий: `macmerf/health-app-2`. Имя образа в GHCR будет
+> `ghcr.io/macmerf/health-app-2:latest` (только строчные буквы — так требует
 > GHCR). Это уже прописано в `deploy.yml` и `docker-compose.yml` — ничего
 > править не нужно.
 
@@ -399,7 +399,7 @@ git push origin main
 Проверка (на сервере или локально с docker):
 
 ```bash
-docker pull ghcr.io/Macmerf/health-app-2:latest
+docker pull ghcr.io/macmerf/health-app-2:latest
 ```
 
 Качается без запроса логина → всё ок.
@@ -426,7 +426,7 @@ type $env:USERPROFILE\.ssh\deploy_key.pub | ssh root@IP_СЕРВЕРА "mkdir -p
 
 ### Шаг E. Добавьте три секрета в GitHub
 
-Откройте: `https://github.com/Macmerf/health-app-2/settings/secrets/actions`
+Откройте: `https://github.com/macmerf/health-app-2/settings/secrets/actions`
 → **New repository secret** — три раза:
 
 | Name | Secret (что вставить) |
@@ -457,7 +457,7 @@ docker compose logs web --tail 20   # нет ошибок
 ```
 git push → GitHub Actions:
   job build: собирает Docker-образ (Next.js build на мощностях GitHub,
-             не на вашем VPS!) и публикует в ghcr.io/Macmerf/health-app-2:latest
+             не на вашем VPS!) и публикует в ghcr.io/macmerf/health-app-2:latest
   job deploy: по SSH заходит на VPS и делает
              git pull → docker compose pull web → docker compose up -d
 ```
@@ -474,5 +474,5 @@ git push → GitHub Actions:
 | Deploy: `Permission denied (publickey)` | Секрет `SSH_PRIVATE_KEY` скопирован не полностью (нет BEGIN/END строк) или публичный ключ не добавлен на сервер (шаг D) |
 | Deploy: `denied` на `docker compose pull` | Пакет GHCR ещё приватный — шаг B |
 | Deploy: `Cannot connect to Docker` | На сервере не запущен Docker: `systemctl start docker` |
-| Deploy зелёный, но сайт старый | Браузер кэширует — Ctrl+F5; либо проверьте, что docker-compose.yml на сервере обновился после `git pull` (образ `ghcr.io/Macmerf/health-app-2`) |
+| Deploy зелёный, но сайт старый | Браузер кэширует — Ctrl+F5; либо проверьте, что docker-compose.yml на сервере обновился после `git pull` (образ `ghcr.io/macmerf/health-app-2`) |
 | 502 после деплоя | Подождите 20–30 сек (start_period healthcheck); если дольше — `docker compose logs -f web` |
