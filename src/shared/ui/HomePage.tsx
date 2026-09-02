@@ -9,8 +9,10 @@ import { ARTICLES } from '@/shared/constants/articles';
 import {
   BookOpen,
   BookText,
+  ChevronRight,
   Footprints,
   Heart,
+  NotebookPen,
   Wind,
   TreePine,
 } from 'lucide-react';
@@ -205,6 +207,25 @@ export function HomePage() {
         <p className='text-xs text-muted-foreground text-center mt-2'>
           Начни с дневника эмоций — это самая удобная точка входа
         </p>
+      </motion.div>
+
+      {/* Быстрая заметка — когда нет времени на полный мастер */}
+      <motion.div variants={item}>
+        <ZCard
+          className='flex items-center gap-3 cursor-pointer'
+          onClick={() => navigate('quick-notes')}
+        >
+          <div className='flex items-center justify-center w-10 h-10 rounded-xl bg-terracotta/10 shrink-0'>
+            <NotebookPen size={20} strokeWidth={1.5} className='text-terracotta' />
+          </div>
+          <div className='flex-1 min-w-0'>
+            <p className='text-sm font-medium text-foreground'>Быстрая заметка</p>
+            <p className='text-xs text-muted-foreground leading-relaxed'>
+              Запиши тревожную мысль одним предложением — позже разберёшь в дневнике.
+            </p>
+          </div>
+          <ChevronRight size={18} strokeWidth={1.5} className='text-muted-foreground shrink-0' />
+        </ZCard>
       </motion.div>
     </motion.div>
   );

@@ -69,3 +69,6 @@ export const useExposureStore = create<ExposureStore>()(
     },
   ),
 );
+
+// Регистрация в реестре hydration делается централизованно
+// в src/shared/ui/RegisterPersistHydration.tsx.

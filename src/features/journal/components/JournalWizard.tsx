@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wind, TreePine, ArrowRight, Sparkles } from 'lucide-react';
 import { ZProgressBar } from '@/shared/ui/ZProgressBar';
@@ -14,10 +14,14 @@ import { texts } from '@/shared/constants/texts';
 import { EmotionSelector } from './EmotionSelector';
 import { ThoughtPatternSelector } from './ThoughtPatternSelector';
 import { useJournalStore } from '../store';
+import { useJournalDraftStore } from '../draftStore';
+import { emotionById } from '../data/emotions';
+import { thoughtPatterns } from '../data/thought-patterns';
 import type { JournalEntry } from '@/shared/schemas';
 import type { ThoughtPattern } from '@/shared/schemas';
 import { useRouterStore, useCareTreeStore } from '@/shared/lib/stores';
 import { checkCrisisKeywords } from '@/shared/lib/crisis-detector';
+import { useHydrated } from '@/shared/lib/storage';
 import { z } from 'zod/v4';
 import type { Emotion } from '../data/emotions';
 
@@ -58,20 +62,81 @@ interface JournalWizardProps {
   onComplete: () => void;
 }
 
+/**
+ * Обёртка: пока черновик не восстановлен из IndexedDB — скелетон.
+ * Иначе пользователь увидит пустые поля и решит, что данные потерялись.
+ * Рендерим тело мастера только после hydration, чтобы не нарушать
+ * правила React (условный return до хуков в дочернем компоненте).
+ */
 export function JournalWizard({ onComplete }: JournalWizardProps) {
-  const [step, setStep] = useState(STEP_A);
-  const [direction, setDirection] = useState(1);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const draftHydrated = useHydrated('zabotapsy-journal-draft');
+  if (!draftHydrated) return <JournalWizardSkeleton />;
+  return <JournalWizardBody onComplete={onComplete} />;
+}
 
-  const [situation, setSituation] = useState('');
-  const [thoughts, setThoughts] = useState('');
-  const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
-  const [selectedPattern, setSelectedPattern] = useState<ThoughtPattern | null>(null);
-  const [physical, setPhysical] = useState('');
-  const [sudsBefore, setSudsBefore] = useState(50);
-  const [newView, setNewView] = useState('');
-  const [reflectionAnswers, setReflectionAnswers] = useState<Record<number, string>>({});
-  const [sudsAfter, setSudsAfter] = useState(50);
+function JournalWizardBody({ onComplete }: JournalWizardProps) {
+  // Черновик хранится в zustand с persist — переход в дыхание/заземление
+  // не теряет введённые данные.
+  const draft = useJournalDraftStore((s) => s.draft);
+  const patchDraft = useJournalDraftStore((s) => s.patch);
+  const clearDraft = useJournalDraftStore((s) => s.clearDraft);
+
+  const [direction, setDirection] = React.useState(1);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  // Подтягиваем объекты эмоции/паттерна по id, чтобы Wizard не пересоздавал
+  // ссылки на каждый рендер (EmotionSelector/ThoughtPatternSelector ожидают стабильные объекты).
+  const selectedEmotion: Emotion | null = useMemo(
+    () => (draft.selectedEmotionId ? (emotionById(draft.selectedEmotionId) ?? null) : null),
+    [draft.selectedEmotionId],
+  );
+  const selectedPattern: ThoughtPattern | null = useMemo(
+    () =>
+      draft.selectedPatternId
+        ? (thoughtPatterns.find((p) => p.id === draft.selectedPatternId) ?? null)
+        : null,
+    [draft.selectedPatternId],
+  );
+
+  const setSituation = useCallback(
+    (v: string) => {
+      patchDraft({ situation: v });
+      if (errors.situation) setErrors((prev) => ({ ...prev, situation: '' }));
+    },
+    [patchDraft, errors.situation],
+  );
+  const setThoughts = useCallback(
+    (v: string) => {
+      patchDraft({ thoughts: v });
+      if (errors.thoughts) setErrors((prev) => ({ ...prev, thoughts: '' }));
+    },
+    [patchDraft, errors.thoughts],
+  );
+  const setSelectedEmotion = useCallback(
+    (e: Emotion | null) => patchDraft({ selectedEmotionId: e?.id ?? null }),
+    [patchDraft],
+  );
+  const setSelectedPattern = useCallback(
+    (p: ThoughtPattern | null) => patchDraft({ selectedPatternId: p?.id ?? null }),
+    [patchDraft],
+  );
+  const setPhysical = useCallback((v: string) => patchDraft({ physical: v }), [patchDraft]);
+  const setSudsBefore = useCallback((v: number) => patchDraft({ sudsBefore: v }), [patchDraft]);
+  const setSudsAfter = useCallback((v: number) => patchDraft({ sudsAfter: v }), [patchDraft]);
+  const setNewView = useCallback(
+    (v: string) => {
+      patchDraft({ newView: v });
+      if (errors.newView) setErrors((prev) => ({ ...prev, newView: '' }));
+    },
+    [patchDraft, errors.newView],
+  );
+  const setReflectionAnswer = useCallback(
+    (idx: number, value: string) => {
+      const next = { ...draft.reflectionAnswers, [idx]: value };
+      patchDraft({ reflectionAnswers: next });
+    },
+    [draft.reflectionAnswers, patchDraft],
+  );
 
   const addEntry = useJournalStore((s) => s.addEntry);
   const addPractice = useCareTreeStore((s) => s.addPractice);
@@ -88,54 +153,56 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
     }
   }, []);
 
+  const step = draft.step;
+
   const validateStep = useCallback(
     (currentStep: number): boolean => {
       const newErrors: Record<string, string> = {};
       if (currentStep === STEP_A) {
-        const res = stepASchema.safeParse({ situation });
+        const res = stepASchema.safeParse({ situation: draft.situation });
         if (!res.success) res.error.issues.forEach((issue) => { newErrors[issue.path.join('.')] = issue.message; });
       } else if (currentStep === STEP_B) {
-        const res = stepBSchema.safeParse({ thoughts });
+        const res = stepBSchema.safeParse({ thoughts: draft.thoughts });
         if (!res.success) res.error.issues.forEach((issue) => { newErrors[issue.path.join('.')] = issue.message; });
       }
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
-    [situation, thoughts],
+    [draft.situation, draft.thoughts],
   );
 
   const goNext = useCallback(() => {
     if (!validateStep(step)) return;
     setDirection(1);
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
-  }, [step, validateStep]);
+    patchDraft({ step: Math.min(step + 1, TOTAL_STEPS - 1) });
+  }, [step, validateStep, patchDraft]);
 
   const goBack = useCallback(() => {
     setDirection(-1);
-    setStep((s) => Math.max(s - 1, 0));
-  }, []);
+    patchDraft({ step: Math.max(step - 1, 0) });
+  }, [step, patchDraft]);
 
   const handleSave = useCallback(() => {
     const now = new Date().toISOString();
     // Собираем ответы на вопросы в newView
     const reflectionParts = texts.journal.reflectionQuestions
       .map((q, i) => {
-        const answer = reflectionAnswers[i]?.trim();
+        const answer = draft.reflectionAnswers[i]?.trim();
         return answer ? `${q}\n${answer}` : '';
       })
       .filter(Boolean);
-    const combinedView = [newView.trim(), ...reflectionParts].filter(Boolean).join('\n\n');
+    const combinedView = [draft.newView.trim(), ...reflectionParts].filter(Boolean).join('\n\n');
 
     const entry: JournalEntry = {
       id: crypto.randomUUID?.() ?? Date.now().toString(36),
       createdAt: now,
       updatedAt: now,
-      situation,
-      thoughts,
-      physical: physical.trim() || undefined,
-      sudsBefore,
-      sudsAfter,
-      newView: combinedView || newView,
+      situation: draft.situation,
+      thoughts: draft.thoughts,
+      physical: draft.physical.trim() || undefined,
+      sudsBefore: draft.sudsBefore,
+      sudsAfter: draft.sudsAfter,
+      newView: combinedView || draft.newView,
       emotionId: selectedEmotion?.id,
       emotionName: selectedEmotion?.name,
       patternId: selectedPattern?.id,
@@ -143,16 +210,17 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
     };
     addEntry(entry);
     addPractice();
+    clearDraft();
     showToast(texts.journal.saved, 'success');
     onComplete();
-  }, [situation, thoughts, physical, sudsBefore, sudsAfter, newView, reflectionAnswers, selectedEmotion, selectedPattern, addEntry, addPractice, showToast, onComplete]);
+  }, [draft, selectedEmotion, selectedPattern, addEntry, addPractice, clearDraft, showToast, onComplete]);
 
   const progressLabels = useMemo(
     () => STEP_LABELS.map((label) => label),
     [],
   );
 
-  const anxietyIncreased = sudsAfter > sudsBefore;
+  const anxietyIncreased = draft.sudsAfter > draft.sudsBefore;
 
   return (
     <div className="flex flex-col">
@@ -166,7 +234,12 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
               <motion.div key="step-a" custom={direction} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }} className="flex flex-col gap-4">
                 <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepA}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepAHelp}</p>
-                <ZTextArea placeholder={texts.journal.situationPlaceholder} value={situation} onChange={(e) => { setSituation(e.target.value); if (errors.situation) setErrors((prev) => ({ ...prev, situation: '' })); }} error={errors.situation} rows={4} />
+                <ZTextArea placeholder={texts.journal.situationPlaceholder} value={draft.situation} onChange={(e) => setSituation(e.target.value)} error={errors.situation} rows={4} />
+                {draft.situation.trim().length > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Черновик сохраняется автоматически — можно перейти в практику и вернуться.
+                  </p>
+                )}
               </motion.div>
             )}
 
@@ -175,8 +248,8 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
               <motion.div key="step-b" custom={direction} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }} className="flex flex-col gap-4">
                 <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepB}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepBHelp}</p>
-                <ZTextArea placeholder={texts.journal.thoughtPlaceholder} value={thoughts} onChange={(e) => { setThoughts(e.target.value); if (errors.thoughts) setErrors((prev) => ({ ...prev, thoughts: '' })); }} error={errors.thoughts} rows={4} />
-                {checkCrisisKeywords(thoughts) && (
+                <ZTextArea placeholder={texts.journal.thoughtPlaceholder} value={draft.thoughts} onChange={(e) => setThoughts(e.target.value)} error={errors.thoughts} rows={4} />
+                {checkCrisisKeywords(draft.thoughts) && (
                   <div className="flex flex-col gap-3 rounded-2xl bg-terracotta/8 border border-terracotta/15 p-4">
                     <p className="text-sm font-medium text-terracotta">{texts.carePlan.crisisDetected}</p>
                     <p className="text-xs text-muted-foreground">{texts.journal.anxietyIncreasedBody}</p>
@@ -213,7 +286,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
               <motion.div key="step-c" custom={direction} variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }} className="flex flex-col gap-4">
                 <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepC}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepCHelp}</p>
-                <ZTextArea placeholder={texts.journal.physicalPlaceholder} value={physical} onChange={(e) => setPhysical(e.target.value)} rows={4} />
+                <ZTextArea placeholder={texts.journal.physicalPlaceholder} value={draft.physical} onChange={(e) => setPhysical(e.target.value)} rows={4} />
                 <div className="rounded-xl bg-primary/8 px-3 py-2">
                   <p className="text-xs text-muted-foreground leading-relaxed">Тело и эмоции связаны. Замечая физические проявления, ты учишься замечать тревогу раньше и помогать себе быстрее.</p>
                 </div>
@@ -226,7 +299,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                 <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepD}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepDHelp}</p>
                 <ZCard className="pt-6 pb-2">
-                  <ZSlider label={texts.journal.sudsLabel} value={sudsBefore} onChange={setSudsBefore} min={0} max={100} step={5} />
+                  <ZSlider label={texts.journal.sudsLabel} value={draft.sudsBefore} onChange={setSudsBefore} min={0} max={100} step={5} />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
                     <span>{texts.journal.sudsLow}</span>
                     <span>{texts.journal.sudsHigh}</span>
@@ -248,6 +321,9 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                       <ArrowRight size={16} strokeWidth={1.5} className="text-muted-foreground shrink-0 ml-auto" />
                     </button>
                   </div>
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    Текст записи сохранится — вернёшься к этому же шагу.
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -287,8 +363,8 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                     <div key={i} className="flex flex-col gap-1.5">
                       <p className="text-sm text-foreground leading-relaxed">{q}</p>
                       <textarea
-                        value={reflectionAnswers[i] ?? ''}
-                        onChange={(e) => setReflectionAnswers((prev) => ({ ...prev, [i]: e.target.value }))}
+                        value={draft.reflectionAnswers[i] ?? ''}
+                        onChange={(e) => setReflectionAnswer(i, e.target.value)}
                         placeholder={texts.journal.reflectionPlaceholder}
                         rows={2}
                         className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-y"
@@ -297,7 +373,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                   ))}
                 </div>
 
-                <ZTextArea placeholder={texts.journal.newViewPlaceholder} value={newView} onChange={(e) => { setNewView(e.target.value); if (errors.newView) setErrors((prev) => ({ ...prev, newView: '' })); }} error={errors.newView} rows={4} />
+                <ZTextArea placeholder={texts.journal.newViewPlaceholder} value={draft.newView} onChange={(e) => setNewView(e.target.value)} error={errors.newView} rows={4} />
 
                 {/* Motivation */}
                 <div className="flex items-start gap-2 rounded-xl bg-primary/8 px-3 py-2">
@@ -307,7 +383,7 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
 
                 {/* SUDS After */}
                 <ZCard className="pt-6 pb-2">
-                  <ZSlider label={`${texts.journal.sudsLabel} (после)`} value={sudsAfter} onChange={setSudsAfter} min={0} max={100} step={5} />
+                  <ZSlider label={`${texts.journal.sudsLabel} (после)`} value={draft.sudsAfter} onChange={setSudsAfter} min={0} max={100} step={5} />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
                     <span>{texts.journal.sudsLow}</span>
                     <span>{texts.journal.sudsHigh}</span>
@@ -324,21 +400,21 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                 <ZCard variant="elevated" className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepA}</span>
-                    <p className="text-sm text-foreground">{situation}</p>
+                    <p className="text-sm text-foreground">{draft.situation}</p>
                   </div>
                   <hr className="border-border" />
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepB}</span>
-                    <p className="text-sm text-foreground">{thoughts}</p>
+                    <p className="text-sm text-foreground">{draft.thoughts}</p>
                     {selectedEmotion && <ZBadge variant="primary" className="self-start mt-1">{selectedEmotion.name}</ZBadge>}
                     {selectedPattern && <ZBadge variant="secondary" className="self-start mt-1">{selectedPattern.friendlyName}</ZBadge>}
                   </div>
-                  {physical && (
+                  {draft.physical && (
                     <>
                       <hr className="border-border" />
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepC}</span>
-                        <p className="text-sm text-foreground">{physical}</p>
+                        <p className="text-sm text-foreground">{draft.physical}</p>
                       </div>
                     </>
                   )}
@@ -346,20 +422,20 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.sudsBeforeLabel}</span>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${sudsBefore}%` }} /></div>
-                      <span className="text-sm font-semibold text-primary tabular-nums w-8 text-right">{sudsBefore}</span>
+                      <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${draft.sudsBefore}%` }} /></div>
+                      <span className="text-sm font-semibold text-primary tabular-nums w-8 text-right">{draft.sudsBefore}</span>
                     </div>
                   </div>
                   <hr className="border-border" />
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.stepE}</span>
-                    <p className="text-sm text-foreground">{newView}</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{draft.newView}</p>
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">{texts.journal.sudsAfterLabel}</span>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className={`h-full rounded-full ${anxietyIncreased ? 'bg-terracotta' : 'bg-primary'}`} style={{ width: `${sudsAfter}%` }} /></div>
-                      <span className={`text-sm font-semibold tabular-nums w-8 text-right ${anxietyIncreased ? 'text-terracotta' : 'text-primary'}`}>{sudsAfter}</span>
+                      <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden"><div className={`h-full rounded-full ${anxietyIncreased ? 'bg-terracotta' : 'bg-primary'}`} style={{ width: `${draft.sudsAfter}%` }} /></div>
+                      <span className={`text-sm font-semibold tabular-nums w-8 text-right ${anxietyIncreased ? 'text-terracotta' : 'text-primary'}`}>{draft.sudsAfter}</span>
                     </div>
                   </div>
                 </ZCard>
@@ -392,9 +468,9 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
                   </div>
                 )}
 
-                {!anxietyIncreased && sudsAfter < sudsBefore && (
+                {!anxietyIncreased && draft.sudsAfter < draft.sudsBefore && (
                   <p className="text-sm text-primary font-medium text-center">
-                    {texts.journal.anxietyDecreased.replace('{n}', String(sudsBefore - sudsAfter))}
+                    {texts.journal.anxietyDecreased.replace('{n}', String(draft.sudsBefore - draft.sudsAfter))}
                   </p>
                 )}
               </motion.div>
@@ -414,6 +490,23 @@ export function JournalWizard({ onComplete }: JournalWizardProps) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Скелетон для JournalWizard: пока черновик не загрузился из IndexedDB,
+ * показываем пульсирующие плашки вместо пустой формы. Иначе пользователь
+ * увидит пустые поля и решит, что данные потерялись.
+ */
+function JournalWizardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 py-8 max-w-lg mx-auto w-full" aria-busy="true">
+      <div className="h-2 w-full rounded-full bg-muted animate-pulse" />
+      <div className="h-6 w-40 rounded bg-muted animate-pulse" />
+      <div className="h-4 w-64 rounded bg-muted animate-pulse" />
+      <div className="h-32 w-full rounded-2xl bg-muted animate-pulse" />
+      <div className="h-12 w-full rounded-2xl bg-muted animate-pulse" />
     </div>
   );
 }

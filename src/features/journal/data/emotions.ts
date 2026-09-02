@@ -78,3 +78,6 @@ export const EMOTIONS: Emotion[] = [
     color: 'bg-muted text-muted-foreground',
   },
 ];
+
+export const emotionById = (id: string): Emotion | undefined =>
+  EMOTIONS.find((e) => e.id === id);

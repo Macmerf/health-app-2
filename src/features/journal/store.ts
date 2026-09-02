@@ -63,3 +63,6 @@ export const useJournalStore = create<JournalStore>()(
     },
   ),
 );
+
+// Регистрация в реестре hydration делается централизованно
+// в src/shared/ui/RegisterPersistHydration.tsx.

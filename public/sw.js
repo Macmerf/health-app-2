@@ -1,4 +1,4 @@
-const CACHE_NAME = 'zabotapsy-v0.2.1';
+const CACHE_NAME = 'zabotapsy-v0.2.2';
 
 /**
  * Версия SW меняется при каждом деплое (см. scripts/sync-sw-version.mjs —

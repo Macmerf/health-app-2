@@ -33,6 +33,7 @@ const dynamicScreen = (loader: () => Promise<{ default: any }>) =>
 
 const JournalWizard = dynamicScreen(() => import('@/features/journal').then(m => ({ default: m.JournalWizard })));
 const JournalHistory = dynamicScreen(() => import('@/features/journal').then(m => ({ default: m.JournalHistory })));
+const QuickNoteList = dynamicScreen(() => import('@/features/quick-notes').then(m => ({ default: m.QuickNoteList })));
 const HierarchyList = dynamicScreen(() => import('@/features/exposure').then(m => ({ default: m.HierarchyList })));
 const HierarchyBuilder = dynamicScreen(() => import('@/features/exposure').then(m => ({ default: m.HierarchyBuilder })));
 const ExposureSession = dynamicScreen(() => import('@/features/exposure').then(m => ({ default: m.ExposureSession })));
@@ -52,6 +53,7 @@ import {
   BarChart3,
   Bell,
   Heart,
+  NotebookPen,
   RotateCcw,
   Sparkles,
   Smile,
@@ -183,6 +185,19 @@ function SettingsPage() {
         <ZBadge variant='primary' className='text-[10px]'>+</ZBadge>
       </ZCard>
 
+      {/* Быстрые заметки */}
+      <ZCard
+        className='flex items-center justify-between cursor-pointer'
+        onClick={() => navigate('quick-notes')}
+
+      >
+        <div className='flex items-center gap-3'>
+          <NotebookPen size={20} strokeWidth={1.5} className='text-muted-foreground' />
+          <span className='text-sm'>Быстрые заметки</span>
+        </div>
+        <ZBadge className='text-[10px]'>free</ZBadge>
+      </ZCard>
+
       {/* Достижения */}
       <ZCard
         className='flex items-center justify-between cursor-pointer'
@@ -303,6 +318,8 @@ function Router() {
         return <ThemePicker />;
       case 'export':
         return <DataExport />;
+      case 'quick-notes':
+        return <QuickNoteList />;
       case 'paywall':
         return <PaywallScreen />;
       case 'notifications':

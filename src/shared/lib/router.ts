@@ -17,7 +17,8 @@ export type AppRoute =
   | 'export'
   | 'paywall'
   | 'settings'
-  | 'notifications';
+  | 'notifications'
+  | 'quick-notes';
 
 export interface RouterState {
   route: AppRoute;

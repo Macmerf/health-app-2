@@ -1,26 +1,93 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { get, set, del } from 'idb-keyval';
 
 const STORAGE_PREFIX = 'zabotapsy_';
 
 /**
- * Флаги hydration persist-сторов.
- * Zustand persist восстанавливает данные из IndexedDB асинхронно:
- * до этого сторы пустые, и UI показывает «нет записей» — ложное состояние.
- * Хук useHydrated() отслеживает hydration и позволяет показывать скелетон.
+ * Реестр hydration-состояний persist-сторов.
+ *
+ * Zustand persist с асинхронным storage (IndexedDB через idb-keyval)
+ * заполняет стор после монтирования. До этого данные пустые — UI должен
+ * показывать скелетон, а не ложное «нет записей».
+ *
+ * Каждый стор регистрируется через `registerHydration(store)` в своём
+ * модуле и подписывается на штатные `persist.onFinishHydration()` / `hasHydrated()`.
+ * Хук `useHydrated(name)` читает snapshot из реестра — без polling.
+ *
+ * Старая реализация (localStorage флаг + setInterval) давала бесконечный
+ * скелетон, если `onRehydrateStorage` не вызывался: например, при ошибке
+ * чтения IndexedDB или при первом запуске без данных на некоторых версиях
+ * idb-keyval. Штатный API `persist.hasHydrated()` всегда даёт ответ.
  */
-const hydrationListeners = new Set<() => void>();
+type HydrationListener = () => void;
 
-function notifyHydrated(name: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(`zabotapsy-hydrated-${name}`, '1');
-  } catch {
-    // localStorage недоступен — hydration-флаг не критичен.
+const hydrationRegistry = new Map<string, boolean>();
+const hydrationListeners = new Set<HydrationListener>();
+
+function notify(): void {
+  for (const l of hydrationListeners) l();
+}
+
+function setHydratedFlag(name: string): void {
+  if (hydrationRegistry.get(name)) return;
+  hydrationRegistry.set(name, true);
+  notify();
+}
+
+interface PersistLike {
+  persist: {
+    hasHydrated: () => boolean;
+    onFinishHydration: (cb: (state: unknown) => void) => () => void;
+  };
+}
+
+/**
+ * Регистрирует persist-стор в реестре hydration.
+ * Если hydration уже произошёл — отметит сразу. Иначе подпишется на onFinishHydration.
+ * Безопасно вызывать многократно (повторно не подписывается).
+ */
+export function registerHydration(store: PersistLike, name: string): void {
+  if (hydrationRegistry.get(name)) return;
+  if (store.persist.hasHydrated()) {
+    setHydratedFlag(name);
+    return;
   }
-  for (const listener of hydrationListeners) listener();
+  const unsub = store.persist.onFinishHydration(() => {
+    setHydratedFlag(name);
+    unsub();
+  });
+  // Safety-net на случай, если hydration так и не наступит (ошибка IDB и т.п.).
+  applyHydrationTimeout(name);
+}
+
+function subscribe(listener: HydrationListener): () => void {
+  hydrationListeners.add(listener);
+  return () => {
+    hydrationListeners.delete(listener);
+  };
+}
+
+function getSnapshot(): Map<string, boolean> {
+  return hydrationRegistry;
+}
+
+/**
+ * Safety-net: зарегистрированные имена, которые так и не получили hydration
+ * за разумное время (например, ошибка чтения IndexedDB), всё равно считаются
+ * hydrated — иначе UI навсегда застрянет в скелетоне. Лучше показать пусто,
+ * чем крутить спиннер бесконечно.
+ */
+const HYDRATION_TIMEOUT_MS = 2500;
+
+function applyHydrationTimeout(name: string): void {
+  setTimeout(() => {
+    if (!hydrationRegistry.get(name)) {
+      hydrationRegistry.set(name, true);
+      notify();
+    }
+  }, HYDRATION_TIMEOUT_MS);
 }
 
 export const storage = {
@@ -64,8 +131,6 @@ export function createPersistConfig(name: string) {
         await storage.remove(key);
       },
     },
-    /** После первой успешной загрузки помечаем стор как hydrated. */
-    onRehydrateStorage: () => () => notifyHydrated(name),
   };
 }
 
@@ -74,30 +139,14 @@ export function createPersistConfig(name: string) {
  * Пока hydrated === false, UI показывает скелетон вместо «пусто».
  */
 export function useHydrated(storeName: string): boolean {
-  const [hydrated, setHydrated] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return localStorage.getItem(`zabotapsy-hydrated-${storeName}`) === '1';
-    } catch {
-      return false;
-    }
-  });
+  const map = useSyncExternalStore(subscribe, getSnapshot, () => new Map());
+  return map.get(storeName) === true;
+}
 
-  useEffect(() => {
-    if (hydrated) return;
-    const flagKey = `zabotapsy-hydrated-${storeName}`;
-    const check = () => {
-      try {
-        if (localStorage.getItem(flagKey) === '1') setHydrated(true);
-      } catch {
-        setHydrated(true);
-      }
-    };
-    check();
-    // Слушаем hydration других сторов: как только нужный — обновляемся.
-    const interval = setInterval(check, 300);
-    return () => clearInterval(interval);
-  }, [hydrated, storeName]);
-
-  return hydrated;
+/**
+ * Для редких случаев, когда нужно дождаться hydration всех сторов
+ * (например, в e2e/тестах или при первом рендере).
+ */
+export function useHydratedMap(): ReadonlyMap<string, boolean> {
+  return useSyncExternalStore(subscribe, getSnapshot, () => new Map());
 }

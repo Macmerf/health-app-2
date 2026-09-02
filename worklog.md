@@ -96,4 +96,25 @@ Stage Summary:
 - Старт UI без ложных «пустых экранов»: скелетоны на время hydration IndexedDB
 - RAM сервера ограничена (768M контейнер + 512M heap), исходящий трафик сжат на уровне Caddy
 
+---
+
+Task ID: fixes-journal-pdf-quicknotes
+Agent: Koda
+Task: Фикс 4 проблем: дневник слетает при переходе в практику; бесконечный скелетон дневника/лестницы; добавить экспорт в PDF; быстрые заметки
+
+Work Log:
+- **Бесконечный скелетон дневника и лестницы**: src/shared/lib/storage.ts — заменил самодельный `setInterval(check, 300)` + `localStorage` флаг на штатный `persist.hasHydrated()` + `onFinishHydration()`. Реестр hydration в памяти (`hydrationRegistry`) с подпиской через `useSyncExternalStore`. Добавлен safety-net 2.5 c — если hydration так и не пришёл (ошибка IDB), UI всё равно покажется, иначе навсегда застрянем в скелетоне
+- src/shared/ui/RegisterPersistHydration.tsx — новый компонент, регистрирует все 9 пользовательских сторов в реестре hydration при монтировании AppShell. Это чисто клиентский код, не выполняется на SSR
+- **Данные дневника слетают при переходе в практику**: src/features/journal/draftStore.ts — новый zustand-стор `useJournalDraftStore` с persist в IndexedDB. Хранит все поля wizard (ситуация, мысли, физические проявления, эмоция, узор мышления, SUDS до/после, новый взгляд, ответы на вопросы рефлексии, текущий шаг). При навигации в дыхание/заземление данные сохраняются, при возврате — восстанавливаются на том же шаге
+- src/features/journal/components/JournalWizard.tsx — переписан с локального useState на draft-store. Разделён на обёртку `JournalWizard` (проверка hydration) и `JournalWizardBody` (основная логика), чтобы не нарушать правила React. `clearDraft()` вызывается после успешного сохранения записи
+- src/features/journal/data/emotions.ts — добавлен хелпер `emotionById`
+- **Быстрые заметки**: src/features/quick-notes/ — новый модуль. `useQuickNotesStore` хранит короткие текстовые заметки + опционально эмоцию. `QuickNoteList` — экран со списком заметок и формой добавления. Кнопка "Разобрать в дневнике" подставляет текст заметки в поле «Ситуация» черновика и открывает wizard на шаге 0
+- src/shared/lib/router.ts — добавлен маршрут 'quick-notes'
+- src/app/page.tsx — QuickNoteList подключён через dynamic, ссылка добавлена в настройки
+- src/shared/ui/HomePage.tsx — карточка «Быстрая заметка» на главной с подсказкой
+- **Экспорт в PDF**: src/features/export/pdfExport.ts — новый модуль. `openPrintableReport()` открывает новое окно с красиво свёрстанным HTML (A4, поля 18мм, цветные SUDS-бары, бейджи эмоций, обложка, футер), инициирует `window.print()`. Пользователь в системном диалоге выбирает «Сохранить как PDF». Без новых зависимостей (бандл не раздулся)
+- src/features/export/DataExport.tsx — обновлён UI: на первом месте карточка «Красивый отчёт для терапевта (PDF)» с двумя режимами (полный / без настроения), ниже CSV-выгрузки дневника и настроения
+- Stage Summary: 4 проблемы закрыты: (1) данные дневника сохраняются при переходе в практику; (2) бесконечный скелетон заменён на штатный API + safety-net 2.5 c; (3) экспорт теперь в PDF (через печать браузера) + CSV; (4) добавлены быстрые заметки с конвертацией в дневник. Проверка: tsc ✓, eslint ✓, 30/30 unit-тестов ✓, next build ✓
+
+
 

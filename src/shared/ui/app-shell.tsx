@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useThemeStore } from '@/shared/lib/stores';
 import { usePaymentStore } from '@/features/payments';
+import { RegisterPersistHydration } from '@/shared/ui/RegisterPersistHydration';
 
 function applyTheme(theme: 'light' | 'dark' | 'warm' | 'forest' | 'ocean') {
   document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -34,5 +35,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return <>{children}</>;
+  return (
+    <>
+      <RegisterPersistHydration />
+      {children}
+    </>
+  );
 }
