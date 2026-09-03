@@ -216,50 +216,56 @@ export function HomePage() {
         <p className='text-sm text-muted-foreground mb-3'>
           {texts.home.sosSubtitle}
         </p>
-        <div className='grid grid-cols-3 gap-3'>
+        <div className='grid grid-cols-3 gap-2 sm:gap-3'>
           <ZCard
-            className='cursor-pointer text-center py-5'
+            className='cursor-pointer text-center px-2 py-4 sm:p-5'
             onClick={() => handlePractice('breathing')}
             aria-label='Дыхательная практика'
           >
-            <Wind size={24} strokeWidth={1.5} className='mx-auto text-primary mb-2' />
-            <p className='text-sm font-medium'>{texts.home.practiceNameBreathing}</p>
-            <p className='text-xs text-muted-foreground mt-1 leading-relaxed'>
+            <Wind size={24} strokeWidth={1.5} className='mx-auto text-primary mb-2 shrink-0' />
+            <p className='text-xs sm:text-sm font-medium leading-tight break-words'>
+              {texts.home.practiceNameBreathing}
+            </p>
+            <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 leading-snug'>
               Вдох 4 сек, выдох 4 сек
             </p>
           </ZCard>
 
           <ZCard
-            className='cursor-pointer text-center py-5'
+            className='cursor-pointer text-center px-2 py-4 sm:p-5'
             onClick={() => handlePractice('grounding')}
             aria-label='Заземление 5-4-3-2-1'
           >
-            <TreePine size={24} strokeWidth={1.5} className='mx-auto text-lavender mb-2' />
-            <p className='text-sm font-medium'>{texts.home.practiceNameGrounding}</p>
-            <p className='text-xs text-muted-foreground mt-1 leading-relaxed'>
+            <TreePine size={24} strokeWidth={1.5} className='mx-auto text-lavender mb-2 shrink-0' />
+            <p className='text-xs sm:text-sm font-medium leading-tight break-words'>
+              {texts.home.practiceNameGrounding}
+            </p>
+            <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 leading-snug'>
               5-4-3-2-1 через чувства
             </p>
           </ZCard>
 
           <ZCard
-            className='cursor-pointer text-center py-5'
+            className='cursor-pointer text-center px-2 py-4 sm:p-5'
             onClick={() => handlePractice('care-plan')}
             aria-label='План заботы'
           >
-            <Heart size={24} strokeWidth={1.5} className='mx-auto text-terracotta mb-2' />
-            <p className='text-sm font-medium'>{texts.home.practiceNameCarePlan}</p>
-            <p className='text-xs text-muted-foreground mt-1 leading-relaxed'>
+            <Heart size={24} strokeWidth={1.5} className='mx-auto text-terracotta mb-2 shrink-0' />
+            <p className='text-xs sm:text-sm font-medium leading-tight break-words'>
+              {texts.home.practiceNameCarePlan}
+            </p>
+            <p className='text-[10px] sm:text-xs text-muted-foreground mt-1 leading-snug'>
               Твои опоры рядом
             </p>
           </ZCard>
         </div>
 
         {/* Опциональная отметка тревоги до практики + тихая кризисная ссылка */}
-        <div className='mt-3 flex items-center justify-between gap-3'>
+        <div className='mt-3 flex flex-wrap items-center gap-x-4 gap-y-2'>
           <button
             onClick={() => setShowPreCheck((v) => !v)}
             aria-expanded={showPreCheck}
-            className='flex items-center gap-1.5 text-xs font-medium text-primary hover:underline'
+            className='flex items-center gap-1.5 text-left text-xs font-medium text-primary hover:underline'
           >
             <ChevronDown
               size={14}
@@ -270,7 +276,7 @@ export function HomePage() {
           </button>
           <button
             onClick={() => setCrisisOpen(true)}
-            className='flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:underline'
+            className='ml-auto flex items-center gap-1.5 text-right text-xs text-muted-foreground hover:text-foreground hover:underline'
           >
             <LifeBuoy size={14} strokeWidth={1.5} />
             {texts.home.crisisLink}
@@ -344,13 +350,13 @@ export function HomePage() {
                 {texts.home.moodNudgeDismiss}
               </button>
             </div>
-            <div className='mt-3 flex items-center justify-between'>
+            <div className='mt-3 flex items-center justify-between gap-1'>
               {MOODS.map((m) => (
                 <button
                   key={m.value}
                   onClick={() => handleMoodPick(m.value)}
                   aria-label={m.label}
-                  className='text-3xl rounded-xl px-2 py-1 transition-transform hover:scale-110 active:scale-95'
+                  className='text-2xl sm:text-3xl rounded-xl px-2 py-1 transition-transform hover:scale-110 active:scale-95'
                 >
                   {m.emoji}
                 </button>
@@ -524,7 +530,7 @@ export function HomePage() {
 
       {/* Кризисный диалог: телефоны профессиональной помощи */}
       <Dialog open={crisisOpen} onOpenChange={setCrisisOpen}>
-        <DialogContent className='max-w-sm rounded-3xl'>
+        <DialogContent className='rounded-3xl sm:max-w-sm'>
           <DialogHeader>
             <DialogTitle className='text-left'>{texts.home.crisisTitle}</DialogTitle>
             <DialogDescription className='text-left leading-relaxed'>
@@ -552,12 +558,12 @@ export function HomePage() {
               <a
                 key={contact.href}
                 href={contact.href}
-                className='flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3 hover:border-primary/40 transition-colors'
+                className='flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-border px-4 py-3 hover:border-primary/40 transition-colors'
               >
-                <span className='text-xs text-muted-foreground leading-snug'>
+                <span className='min-w-0 text-xs text-muted-foreground leading-snug'>
                   {contact.label}
                 </span>
-                <span className='text-sm font-semibold text-primary whitespace-nowrap'>
+                <span className='shrink-0 text-sm font-semibold text-primary whitespace-nowrap'>
                   {contact.value}
                 </span>
               </a>
