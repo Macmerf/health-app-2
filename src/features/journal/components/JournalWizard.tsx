@@ -334,7 +334,7 @@ function JournalWizardBody({ onComplete }: JournalWizardProps) {
                                 <h2 className="text-lg font-semibold text-foreground">{texts.journal.stepE}</h2>
                 <p className="text-sm text-muted-foreground">{texts.journal.stepEHelp}</p>
 
-                {/* Выбранный узор мышления — описание, пример, вопросы для рефрейминга */}
+                {/* Выбранная ошибка мышления — описание, пример, вопросы для рефрейминга */}
                 {selectedPattern && (
                   <div className="flex flex-col gap-3 rounded-2xl bg-lavender/8 border border-lavender/20 p-4">
                     <div className="flex flex-col gap-1">

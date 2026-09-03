@@ -1,3 +1,3 @@
 'use client';
 
-export { MoodTracker } from './MoodTracker';
+export { MoodTracker, MOODS } from './MoodTracker';

@@ -30,7 +30,7 @@ export function DataExport() {
 
   const exportJournalCSV = () => {
     const entries = useJournalStore.getState().entries;
-    const lines = ['Дата,Ситуация,Мысли,Физические проявления,Тревога до,Тревога после,Новый взгляд,Эмоция,Узор мышления'];
+    const lines = ['Дата,Ситуация,Мысли,Физические проявления,Тревога до,Тревога после,Новый взгляд,Эмоция,Ошибка мышления'];
     for (const e of entries) {
       const date = new Date(e.createdAt).toLocaleDateString('ru-RU');
       const esc = (s: string) => `"${(s || '').replace(/"/g, '""')}"`;

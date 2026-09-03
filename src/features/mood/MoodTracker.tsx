@@ -7,7 +7,7 @@ import { ZButton } from '@/shared/ui/ZButton';
 import { FeatureGate } from '@/features/payments';
 import { useMoodStore } from '@/shared/lib/stores';
 
-const MOODS = [
+export const MOODS = [
   { value: 1, emoji: '😞', label: 'Очень плохо' },
   { value: 2, emoji: '😕', label: 'Плохо' },
   { value: 3, emoji: '😐', label: 'Нормально' },

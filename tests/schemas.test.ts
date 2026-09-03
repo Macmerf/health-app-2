@@ -33,7 +33,7 @@ describe('JournalEntrySchema', () => {
     }
   });
 
-  it('принимает запись с выбранным узором мышления', () => {
+  it('принимает запись с выбранной ошибкой мышления', () => {
     const res = JournalEntrySchema.safeParse({
       ...baseEntry,
       sudsBefore: 70,

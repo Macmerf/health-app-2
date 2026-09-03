@@ -11,6 +11,10 @@ import { useGamificationStore } from '@/features/gamification/store';
 import { usePaymentStore } from '@/features/payments/store';
 import { useMoodStore, useCareTreeStore } from '@/shared/lib/stores';
 import { useNotificationSettingsStore } from '@/features/gamification/components/NotificationsScreen';
+import {
+  useMoodNudgeStore,
+  useSudsCheckInStore,
+} from '@/features/checkin/store';
 
 /**
  * Регистрирует все пользовательские persist-сторы в реестре hydration.
@@ -35,6 +39,8 @@ export function RegisterPersistHydration() {
       useNotificationSettingsStore as never,
       'zabotapsy-notification-settings',
     );
+    registerHydration(useSudsCheckInStore, 'zabotapsy-suds-checkin');
+    registerHydration(useMoodNudgeStore, 'zabotapsy-mood-nudge');
   }, []);
   return null;
 }

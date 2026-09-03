@@ -48,8 +48,8 @@ export const texts = {
     patternSelectTitle: 'Какая это эмоция?',
     patternSearchPlaceholder: 'Найти эмоцию...',
     noPattern: 'Без эмоции',
-    thoughtPatternTitle: 'Похоже на один из узоров мышления?',
-    thoughtPatternHelp: 'Узоры мышления — это повторяющиеся способы думать, которые усиливают тревогу. Посмотри, какой похож на твои мысли. Это не диагноз, а подсказка для нового взгляда.',
+    thoughtPatternTitle: 'Похоже на одну из ошибок мышления?',
+    thoughtPatternHelp: 'Ошибки мышления — это повторяющиеся способы думать, которые усиливают тревогу. Посмотри, какая из них похожа на твои мысли. Это не диагноз, а подсказка для нового взгляда.',
     thoughtPatternNone: 'Не похоже ни на один',
     thoughtPatternExample: 'Пример',
     thoughtPatternReframing: 'Вопросы для нового взгляда',
@@ -238,6 +238,32 @@ export const texts = {
     achievements: 'Достижения',
     settings: 'Настройки',
     analytics: 'Аналитика',
+  },
+
+  home: {
+    sosTitle: 'Тревожно прямо сейчас?',
+    sosSubtitle: 'Помоги себе за минуту — выбери то, что откликается.',
+    preCheckToggle: 'Отметить тревогу до практики',
+    preCheckHint: 'Запомним уровень — после практики сравним',
+    practiceNameBreathing: 'Дыхание',
+    practiceNameGrounding: 'Заземление',
+    practiceNameCarePlan: 'План заботы',
+    postCheckTitle: 'Как тревога после практики «{name}»?',
+    postCheckSubmit: 'Отметить',
+    anxietyNotChanged:
+      'Тревога не ушла сразу — и это нормально. Ты сделал шаг заботы о себе, а это уже путь.',
+    ctaMain: 'Продолжить путь',
+    ctaHint: 'Начни с дневника эмоций — это самая удобная точка входа',
+    crisisLink: 'Нужна помощь специалиста?',
+    crisisTitle: 'Обратиться за помощью — это забота о себе',
+    crisisBody:
+      'ЗаботаPsy не заменяет профессиональную помощь. Если тяжело прямо сейчас или ты в опасности — позвони, тебя выслушают:',
+    crisisClose: 'Закрыть',
+    moodNudgeTitle: 'Как твой день?',
+    moodNudgeSubtitle: 'Отметь настроение — это займёт 10 секунд',
+    moodNudgeSaved: 'Спасибо! Настроение отмечено.',
+    moodNudgeOpen: 'Журнал настроения',
+    moodNudgeDismiss: 'Не сегодня',
   },
 } as const;
 

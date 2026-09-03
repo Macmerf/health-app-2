@@ -17,7 +17,7 @@ export const achievements: Achievement[] = [
   {
     id: 'patterns_5',
     name: 'Исследователь мыслей',
-    description: 'Ты попробовал 5 разных узоров мышления',
+    description: 'Ты попробовал 5 разных ошибок мышления',
     icon: 'Search',
     condition: 'patterns_5',
   },
@@ -94,7 +94,7 @@ export const achievements: Achievement[] = [
   {
     id: 'patterns_10',
     name: 'Открытость',
-    description: 'Ты выбрал 10 разных узоров мышления',
+    description: 'Ты выбрал 10 разных ошибок мышления',
     icon: 'Eye',
     condition: 'patterns_10',
   },
